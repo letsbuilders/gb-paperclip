@@ -1,0 +1,7 @@
+require 'paperclip'
+require 'gb_paperclip/paperclip/storage/glacier'
+require 'gb_paperclip/paperclip/storage/glacier_fog'
+require 'gb_paperclip/paperclip/storage/multiple_storage'
+require 'gb_paperclip/paperclip/storage/s3_improved'
+require 'gb_paperclip/paperclip/storage/s3_v2'
+require 'gb_paperclip/paperclip/storage/storage_proxy'
