@@ -1,11 +1,8 @@
+require 'gb_paperclip/paperclip/thumbnail'
+require 'gb_paperclip/paperclip/attachment'
+require 'gb_paperclip/paperclip/fake_geometry'
+
 module Paperclip
-  class FakeGeometry
-    def self.from_file(file)
-      nil
-    end
-  end
-
-
   class PdfThumbnail < Paperclip::Thumbnail
     include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
