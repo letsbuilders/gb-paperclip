@@ -73,7 +73,6 @@ module Paperclip
         sleep 0.01
       end
       @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
-      dst.close if dst.respond_to? :close
       @attachment.flush_writes unless @attachment.is_dirty?
       @attachment.finished_processing @style
       begin
@@ -85,6 +84,11 @@ module Paperclip
         @safe_copy.unlink
       rescue Exception => e
         Opbeat.capture_exception(e)
+      end
+      begin
+        dst.close if dst.respond_to? :close
+      rescue
+        nil
       end
     rescue Exception => e
       Opbeat.capture_exception(e)
