@@ -69,11 +69,11 @@ module Paperclip
         @attachment.failed_processing @style if @attachment && @style
         raise Paperclip::Errors::CommandNotFoundError.new("Could not run the `convert` command. Please install ImageMagick.")
       end
-      @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
-      dst.close if dst.respond_to? :close
       while @attachment.is_saving?
         sleep 0.01
       end
+      @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
+      dst.close if dst.respond_to? :close
       @attachment.flush_writes unless @attachment.is_dirty?
       @attachment.finished_processing @style
       begin

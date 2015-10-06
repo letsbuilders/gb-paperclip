@@ -1,17 +1,27 @@
 require 'paperclip/attachment'
 module Paperclip
   class Attachment
-    @@processor_info_lock = Mutex.new
     module SaveExtension
-      def save
-        @is_saving = true
-        @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+      def initialize(*args)
+        @processor_info_lock = Mutex.new
+        @status_lock         = Mutex.new
         super
-        @is_saving = false
+      end
+
+      def save
+        @status_lock.lock
+        begin
+          @is_saving        = true
+          @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+        ensure
+          @status_lock.unlock
+        end
+        super
+        @status_lock.synchronize { @is_saving = false }
       end
 
       def is_saving?
-        !!@is_saving
+        status_lock.synchronize { !!@is_saving }
       end
 
       def unlink_files(files)
@@ -58,7 +68,7 @@ module Paperclip
     def processing(style)
       style = get_style_name(style)
       begin
-        @@processor_info_lock.lock
+        @processor_info_lock.lock
         @processor_tracker ||= []
         if @processor_tracker.count == 0
           if is_dirty?
@@ -69,46 +79,54 @@ module Paperclip
         end
         @processor_tracker << style
       ensure
-        @@processor_info_lock.unlock
+        @processor_info_lock.unlock
       end
       @processor_tracker
     end
 
     def failed_processing(style)
       style = get_style_name(style)
-      @@processor_info_lock.lock
-      is_included = @processor_tracker.include? style
-      @@processor_info_lock.unlock
+      is_included = @processor_info_lock.synchronize { @processor_tracker.include? style }
       return unless is_included
-      @@processor_info_lock.lock
-      @processor_tracker.delete style
-      @@processor_info_lock.unlock
-
+      processor_info_lock.synchronize do
+        @processor_tracker.delete style
+      end
       save_processing_info
       @processed_styles
     end
 
     def finished_processing(style)
       style = get_style_name(style)
-      @@processor_info_lock.lock
-      is_included = @processor_tracker.include? style
-      @@processor_info_lock.unlock
+      is_included = processor_info_lock.synchronize { @processor_tracker.include? style }
       return unless is_included
-      @@processor_info_lock.lock
-      @processor_tracker.delete style
-      @processed_styles ||= []
-      @processed_styles << style
-      @@processor_info_lock.unlock
+      processor_info_lock.synchronize do
+        @processor_tracker.delete style
+        @processed_styles ||= []
+        @processed_styles << style
+      end
       save_processing_info
       @processed_styles
     end
 
     def is_dirty?
-      @dirty
+      status_lock.synchronize { @dirty }
     end
 
     private
 
+    def dirty!
+      status_lock.synchronize { @dirty = true }
+    end
+
+    # @return [Mutex]
+    def processor_info_lock
+      @processor_info_lock
+    end
+
+    # @return [Mutex]
+    def status_lock
+      @status_lock
+    end
 
     def get_style_name(style)
       if style.is_a? Paperclip::Style
@@ -119,7 +137,7 @@ module Paperclip
 
     def save_processing_info
       begin
-        @@processor_info_lock.lock
+        @processor_info_lock.lock
         @processed_styles ||= []
         if @processor_tracker.count == 0
           if is_dirty?
@@ -130,7 +148,7 @@ module Paperclip
           end
         end
       ensure
-        @@processor_info_lock.unlock
+        @processor_info_lock.unlock
       end
     end
   end
