@@ -1,5 +1,6 @@
 module Paperclip
   class AbstractAdapter
+    # @return [Tempfile]
     def to_tempfile
       @tempfile
     end
@@ -305,7 +306,18 @@ module Paperclip
             write_options[:metadata] = @s3_metadata unless @s3_metadata.empty?
             write_options.merge!(@s3_headers)
 
-            s3_object(style).upload_file(file.to_tempfile, write_options)
+            begin
+              s3_object(style).upload_file(file.to_tempfile, write_options)
+            rescue IOError
+              temp_file = file.to_tempfile
+              temp_file.open
+              temp_file.rewind
+              if retries < 3 && temp_file.size > 0
+                retries += 1
+                retry
+              end
+              retries = 0
+            end
           rescue Aws::S3::Errors::NoSuchBucket
             create_bucket
             retry
