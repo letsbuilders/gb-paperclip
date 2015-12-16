@@ -75,20 +75,20 @@ module Paperclip
       @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
       @attachment.flush_writes unless @attachment.is_dirty?
       @attachment.finished_processing @style
-      begin
-        @safe_copy.close
-      rescue Exception => e
-        Opbeat.capture_exception(e)
-      end
-      begin
-        @safe_copy.unlink
-      rescue Exception => e
-        Opbeat.capture_exception(e)
-      end
-      begin
-        dst.close if dst.respond_to? :close
-      rescue
-        nil
+      Thread.new do
+        sleep(5)
+        begin
+          @safe_copy.close!
+        rescue Exception => e
+          puts e.message
+          Opbeat.capture_exception(e)
+        end
+        begin
+          dst.close! if dst.respond_to? :close!
+        rescue Exception => e
+          puts e.message
+          nil
+        end
       end
     rescue Exception => e
       Opbeat.capture_exception(e)
