@@ -64,10 +64,15 @@ module Paperclip
         success = convert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
       rescue Cocaine::ExitStatusError => e
         @attachment.failed_processing @style if @attachment && @style
+        unlink_files @safe_copy, dst
         raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
       rescue Cocaine::CommandNotFoundError => e
         @attachment.failed_processing @style if @attachment && @style
+        unlink_files @safe_copy, dst
         raise Paperclip::Errors::CommandNotFoundError.new("Could not run the `convert` command. Please install ImageMagick.")
+      rescue Exception => e
+        unlink_files @safe_copy, dst
+        raise e
       end
       while @attachment.is_saving?
         sleep 0.01
@@ -75,24 +80,10 @@ module Paperclip
       @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
       @attachment.flush_writes unless @attachment.is_dirty?
       @attachment.finished_processing @style
-      Thread.new do
-        sleep(5)
-        begin
-          @safe_copy.close!
-        rescue Exception => e
-          puts e.message
-          Opbeat.capture_exception(e)
-        end
-        begin
-          dst.close! if dst.respond_to? :close!
-        rescue Exception => e
-          puts e.message
-          nil
-        end
-      end
+      unlink_files @safe_copy, dst
     rescue Exception => e
-      Opbeat.capture_exception(e)
       @attachment.failed_processing @style if @attachment && @style
+      unlink_files @safe_copy, dst
       raise e
     end
 
@@ -107,6 +98,13 @@ module Paperclip
       trans << "-crop" << %["#{crop}"] << "+repage" if crop
       trans << '-layers "optimize"' if animated?
       trans
+    end
+
+    def unlink_files(*files)
+      Array(files).each do |file|
+        file.close unless file.closed?
+        file.unlink if file.respond_to?(:unlink) && file.path.present? && File.exist?(file.path)
+      end
     end
 
     add_transaction_tracer :current_geometry

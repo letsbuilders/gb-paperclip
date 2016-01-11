@@ -6,7 +6,6 @@ module Paperclip
         adapter  = Paperclip.io_adapters.for(value)
         detector = Paperclip::MediaTypeSpoofDetector.using(adapter, value.original_filename, value.content_type)
         if detector.content_type_mismatch?
-          puts 'mismatch!'
           record.send "#{attribute}_spoof_warning=", true
           record.send "#{attribute}_spoof_content_type=", detector.spoofed_content_type
         end

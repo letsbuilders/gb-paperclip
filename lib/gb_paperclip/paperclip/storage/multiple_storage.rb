@@ -49,7 +49,8 @@ module Paperclip
         threads          =[]
         critical_threads = []
         @backup_stores.each do |store|
-          store.queued_for_write  = @queued_for_write.clone.delete_if { |style, _| style != :original }
+          backup_queued_for_write = Hash.new.merge(@queued_for_write).delete_if { |style, _| style != :original }
+          store.queued_for_write  = backup_queued_for_write
           if @backup_sync
             store.flush_writes
           else
@@ -69,7 +70,7 @@ module Paperclip
           end
         end
         @additional_stores.each do |store|
-          store.queued_for_write = @queued_for_write.clone
+          store.queued_for_write  = @queued_for_write
           (thr = Thread.new do
             begin
               ActiveRecord::Base.connection_pool.with_connection do

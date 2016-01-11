@@ -16,8 +16,9 @@ module Paperclip
         ensure
           @status_lock.unlock
         end
-        super
+        result = super
         @status_lock.synchronize { @is_saving = false }
+        result
       end
 
       def is_saving?
@@ -46,6 +47,7 @@ module Paperclip
             @queued_for_write[name] = Paperclip.io_adapters.for(@queued_for_write[name])
             unadapted_file.close if unadapted_file.respond_to?(:close)
           end
+          @queued_for_write[name]
         rescue Paperclip::Errors::NotIdentifiedByImageMagickError => e
           failed_processing style
           log("An error was received while processing: #{e.inspect}")
@@ -56,10 +58,6 @@ module Paperclip
         ensure
           unlink_files(intermediate_files)
         end
-      end
-
-      def post_process(*style_args)
-        super
       end
     end
 

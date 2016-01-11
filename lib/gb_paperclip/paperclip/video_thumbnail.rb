@@ -46,13 +46,6 @@ module Paperclip
           dst        = Tempfile.new([@basename, "#{@format}"].compact.join("."))
           dst.binmode
           success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
-          begin
-            src.close
-            src.unlink
-          rescue Exception => e
-            Opbeat.capture_exception e
-            raise e
-          end
         end
         @attachment.finished_processing @style
       rescue Cocaine::CommandNotFoundError => e
@@ -61,6 +54,16 @@ module Paperclip
       rescue Exception => e
         @attachment.failed_processing @style if @attachment && @style
         raise e
+      ensure
+        begin
+          if src
+            src.close!
+          else
+            dst.close!
+          end
+        rescue Exception
+          nil
+        end
       end
       dst
     end
