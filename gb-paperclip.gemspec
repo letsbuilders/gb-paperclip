@@ -19,5 +19,6 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'paperclip', '>=4.2.0'
+  s.add_dependency 'gb_dispatch', '~> 0.0.1'
   #s.metadata['allowed_push_host'] = 'http://gems.bobisdead.com/'
 end

@@ -1,6 +1,4 @@
-#source 'http://rubygems.org'
-source 'http://genie:cvjhdxGMTzOrFO9IxU1tzwxHalgwzP@tools.bobisdead.com/gems'
-#source 'http://geniedeveloper:cvjhdxGMTzOrFO9IxU1tzwxHalgwzP@gems.bobisdead.com'
+source 'http://rubygems.org'
 ruby '2.2.2'
 
 # Declare your gem's dependencies in push.gemspec.
@@ -10,6 +8,7 @@ gemspec
 
 
 gem 'paperclip'
+gem 'gb_dispatch'
 
 group :development do
   gem 'guard'
