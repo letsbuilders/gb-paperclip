@@ -1,6 +1,7 @@
 require 'gb_paperclip/paperclip/thumbnail'
 require 'gb_paperclip/paperclip/attachment'
 require 'gb_paperclip/paperclip/fake_geometry'
+require 'gb_dispatch'
 
 module Paperclip
   class PdfThumbnail < Paperclip::Thumbnail
@@ -37,7 +38,8 @@ module Paperclip
 
     def make
       if @attachment
-        CentralDispatch.dispatch_async do
+        queue = @style ? "paperclip_#{@style}" : :paperclip
+        GBDispatch.dispatch_async_on_queue queue do
           source_path = "#{File.expand_path(@safe_copy.path)}#{'[0]' unless animated?}"
           process_thumbnails source_path
         end
@@ -78,8 +80,13 @@ module Paperclip
         sleep 0.01
       end
       @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
-      @attachment.flush_writes unless @attachment.is_dirty?
-      @attachment.finished_processing @style
+      if @attachment.is_dirty?
+        @attachment.finished_processing @style
+      else
+        GBDispatch.dispatch_async_on_queue(:paperclip_upload) { @attachment.flush_writes }
+        @attachment.finished_processing @style
+      end
+
       unlink_files @safe_copy, dst
     rescue Exception => e
       @attachment.failed_processing @style if @attachment && @style

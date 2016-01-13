@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gb_paperclip (0.1.0)
+    gb_paperclip (0.2.0)
       gb_dispatch (~> 0.0.1)
       paperclip (>= 4.2.0)
 
@@ -100,4 +100,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   1.10.5
+   1.10.6

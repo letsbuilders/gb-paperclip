@@ -1,5 +1,12 @@
 require 'paperclip/attachment'
 module Paperclip
+  class HasAttachedFile
+    def add_paperclip_callbacks
+      @klass.send(
+          :define_paperclip_callbacks,
+          :post_process, :"#{@name}_post_process", :async_post_process)
+    end
+  end
   class Attachment
     module SaveExtension
       def initialize(*args)
@@ -110,6 +117,13 @@ module Paperclip
       status_lock.synchronize { @dirty }
     end
 
+    # :nodoc:
+    def staged_path(style_name = default_style)
+      if staged? && @queued_for_write[style_name]
+        @queued_for_write[style_name].path
+      end
+    end
+
     private
 
     def dirty!
@@ -138,11 +152,14 @@ module Paperclip
         @processor_info_lock.lock
         @processed_styles ||= []
         if @processor_tracker.count == 0
-          if is_dirty?
-            @instance.processing = false
-            @instance.processed_styles = @processed_styles
+          if is_dirty? && !is_saving?
+            instance.processing       = false
+            instance.processed_styles = @processed_styles
           else
-            @instance.update_attributes processing: false, processed_styles: @processed_styles
+            instance.run_paperclip_callbacks(:async_post_process) do
+              instance.update_column :processing, false
+              instance.update_column :processed_styles, @processed_styles
+            end
           end
         end
       ensure
