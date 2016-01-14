@@ -1,17 +1,12 @@
 require 'paperclip/attachment'
+require 'gb_paperclip/paperclip/has_attached_file'
 module Paperclip
-  class HasAttachedFile
-    def add_paperclip_callbacks
-      @klass.send(
-          :define_paperclip_callbacks,
-          :post_process, :"#{@name}_post_process", :async_post_process)
-    end
-  end
   class Attachment
     module SaveExtension
       def initialize(*args)
         @processor_info_lock = Mutex.new
         @status_lock         = Mutex.new
+        @attributes_lock     = Mutex.new
         super
       end
 
@@ -19,11 +14,13 @@ module Paperclip
         @status_lock.lock
         begin
           @is_saving        = true
-          @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+          @attributes_lock.synchronize do
+            @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+          end
+          result = super
         ensure
           @status_lock.unlock
         end
-        result = super
         @status_lock.synchronize { @is_saving = false }
         result
       end
@@ -42,19 +39,25 @@ module Paperclip
         begin
           raise RuntimeError.new("Style #{name} has no processors defined.") if style.processors.blank?
 
-          @queued_for_write[name] = style.processors.inject(@queued_for_write[:original]) do |file, processor|
+          processor_result = style.processors.inject(@queued_for_write[:original]) do |file, processor|
             file = Paperclip.processor(processor).make(file, style.processor_options, self)
             intermediate_files << file if file
             file
           end
-          if @queued_for_write[name].nil?
-            @queued_for_write.delete name
-          else
-            unadapted_file = @queued_for_write[name]
-            @queued_for_write[name] = Paperclip.io_adapters.for(@queued_for_write[name])
-            unadapted_file.close if unadapted_file.respond_to?(:close)
+          @attributes_lock.lock
+          begin
+            @queued_for_write[name] = processor_result
+            if @queued_for_write[name].nil?
+              @queued_for_write.delete name
+            else
+              unadapted_file          = @queued_for_write[name]
+              @queued_for_write[name] = Paperclip.io_adapters.for(@queued_for_write[name])
+              unadapted_file.close if unadapted_file.respond_to?(:close)
+            end
+            @queued_for_write[name]
+          ensure
+            @attributes_lock.unlock
           end
-          @queued_for_write[name]
         rescue Paperclip::Errors::NotIdentifiedByImageMagickError => e
           failed_processing style
           log("An error was received while processing: #{e.inspect}")
@@ -65,6 +68,18 @@ module Paperclip
         ensure
           unlink_files(intermediate_files)
         end
+      end
+
+      def queued_for_write
+        @attributes_lock.synchronize { @queued_for_write }
+      end
+
+      def staged?
+        @attributes_lock.synchronize { super }
+      end
+
+      def dirty?
+        @status_lock.synchronize { super }
       end
     end
 
@@ -119,8 +134,8 @@ module Paperclip
 
     # :nodoc:
     def staged_path(style_name = default_style)
-      if staged? && @queued_for_write[style_name]
-        @queued_for_write[style_name].path
+      if staged? && queued_for_write[style_name]
+        queued_for_write[style_name].path
       end
     end
 
