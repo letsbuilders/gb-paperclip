@@ -2,22 +2,17 @@ require 'paperclip/media_type_spoof_detector'
 
 module Paperclip
   class MediaTypeSpoofDetector
-    old_spoofed = instance_method(:spoofed?)
 
-    define_method(:spoofed?) do
-      if content_types_from_name.count > 0
-        spoofed = old_spoofed.bind(self).()
-        if defined? Rails
-          if spoofed
-            Rails.logger.fatal "MIME Spoofed file alert! file: '#{@name}' detected as '#{calculated_content_type}' but it should be: #{supplied_content_type}"
-          elsif content_type_mismatch?
-            Rails.logger.warn "MIME Spoofed probable file: '#{@name}' detected as '#{calculated_content_type}' but it should be: #{supplied_content_type}"
-          end
-        end
-        spoofed
+    def spoofed?
+      if has_name? && has_extension? && calculated_content_type_mismatch?
+        Paperclip.log("Content Type Spoof: Filename #{File.basename(@name)}, detected as #{calculated_content_type} but should be #{content_types_from_name.map(&:content_type).join(', ')}")
       else
         false
       end
+    end
+
+    def calculated_content_type_mismatch?
+      !(calculated_content_type && content_types_from_name.include?(calculated_content_type))
     end
 
     def content_type_mismatch?
