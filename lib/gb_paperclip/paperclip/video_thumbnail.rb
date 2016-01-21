@@ -27,6 +27,7 @@ module Paperclip
     def make
       dst = Tempfile.new([@basename, 'jpg'].compact.join("."))
       dst.binmode
+      src = nil
 
       cmd = %Q[-itsoffset #{time_offset} -i "#{File.expand_path(file.path)}" -y -vcodec mjpeg -vframes 1 -an -f rawvideo ]
       cmd << "-s #{geometry.to_s} " unless geometry.nil?
@@ -50,17 +51,15 @@ module Paperclip
         @attachment.finished_processing @style
       rescue Cocaine::CommandNotFoundError => e
         @attachment.failed_processing @style if @attachment && @style
+        dst.close! if dst && dst.respond_to?(:close!)
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `ffmpeg` command. Please install FFmpeg') if whiny
       rescue Exception => e
         @attachment.failed_processing @style if @attachment && @style
+        dst.close! if dst && dst.respond_to?(:close!)
         raise e
       ensure
         begin
-          if src
-            src.close!
-          else
-            dst.close!
-          end
+          src.close! if src && src.respond_to?(:close!)
         rescue Exception
           nil
         end
