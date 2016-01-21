@@ -9,6 +9,7 @@ module Paperclip
       geometry = options[:geometry].to_s
       @file    = file
       @crop    = geometry[-1, 1] == '#'
+      @style   = options[:style]
 
       @time_offset = options[:time_offset] || '-4'
       unless options[:geometry].nil? || (@geometry = Geometry.parse(options[:geometry])).nil?
@@ -35,20 +36,20 @@ module Paperclip
       begin
         success           = Paperclip.run('ffmpeg', cmd)
         @current_geometry = options.fetch(:file_geometry_parser, Geometry).from_file(dst)
-        if @format != :jpg
-          parameters = []
-          parameters << source_file_options
-          parameters << ":source"
-          parameters << transformation_command
-          parameters << convert_options
-          parameters << ":dest"
-          parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
-          src        = dst
-          dst        = Tempfile.new([@basename, "#{@format}"].compact.join("."))
-          dst.binmode
-          success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
-        end
+        parameters        = []
+        parameters << source_file_options
+        parameters << ":source"
+        parameters << transformation_command
+        parameters << convert_options
+        parameters << ":dest"
+        parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
+        src        = dst
+        dst        = Tempfile.new([@basename, "#{@format}"].compact.join("."))
+        dst.binmode
+        success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
         @attachment.finished_processing @style
+        Paperclip.log "#{@attachment} finsihed style #{@style}"
+        success
       rescue Cocaine::CommandNotFoundError => e
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
@@ -57,7 +58,7 @@ module Paperclip
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         dst = nil
-          #raise ex
+        raise e
       ensure
         begin
           src.close! if src && src.respond_to?(:close!)
