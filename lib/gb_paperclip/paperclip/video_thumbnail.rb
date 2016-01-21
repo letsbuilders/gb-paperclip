@@ -56,7 +56,8 @@ module Paperclip
       rescue Exception => e
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
-        raise e
+        dst = nil
+          #raise e
       ensure
         begin
           src.close! if src && src.respond_to?(:close!)
