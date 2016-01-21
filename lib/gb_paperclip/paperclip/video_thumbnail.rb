@@ -48,7 +48,6 @@ module Paperclip
         dst.binmode
         success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
         @attachment.finished_processing @style
-        Paperclip.log "#{@attachment} finsihed style #{@style}"
         success
       rescue Cocaine::CommandNotFoundError => e
         @attachment.failed_processing @style if @attachment && @style
