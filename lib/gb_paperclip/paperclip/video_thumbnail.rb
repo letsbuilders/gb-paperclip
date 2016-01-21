@@ -16,7 +16,6 @@ module Paperclip
         @geometry.height   = (@geometry.height / 2.0).floor * 2.0
         @geometry.modifier = ''
       end
-      @current_geometry    = options.fetch(:file_geometry_parser, Geometry).from_file(file)
       @whiny               = options[:whiny].nil? ? true : options[:whiny]
       @convert_options     = options[:convert_options]
       @source_file_options = options[:source_file_options]
@@ -34,7 +33,8 @@ module Paperclip
       cmd << %Q["#{File.expand_path(dst.path)}"]
 
       begin
-        success = Paperclip.run('ffmpeg', cmd)
+        success           = Paperclip.run('ffmpeg', cmd)
+        @current_geometry = options.fetch(:file_geometry_parser, Geometry).from_file(dst)
         if @format != :jpg
           parameters = []
           parameters << source_file_options
@@ -57,7 +57,7 @@ module Paperclip
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         dst = nil
-          #raise e
+          #raise ex
       ensure
         begin
           src.close! if src && src.respond_to?(:close!)
