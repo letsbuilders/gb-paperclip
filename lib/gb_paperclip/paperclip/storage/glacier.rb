@@ -222,7 +222,7 @@ module Paperclip
           next unless glacier_ids && glacier_ids[path]
           log("deleting from glacier #{path}")
           glacier_vault.archive(glacier_ids[path]).delete
-          new_ids = glacier_ids.clone
+          new_ids = Hash.new.merge glacier_ids
           new_ids.delete path
           begin
             instance.update_column(:glacier_ids, new_ids)

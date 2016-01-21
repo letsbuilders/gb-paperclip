@@ -14,13 +14,13 @@ module Paperclip
           @additional_stores        = []
           additional_stores_options = @options.clone
           (additional_stores_options[:stores][:additional] || []).each do |store_option|
-            additional_store_options           = @options.clone
+            additional_store_options           = Hash.new.merge @options
             additional_store_options[:storage] = store_option[:storage]
             @additional_stores << Paperclip::Storage::StorageProxy.new(additional_store_options.merge(store_option), self)
           end
-          @backup_sync = @options[:backup_form] == :sync
+          @backup_sync           = @options[:backup_form] == :sync
           @backup_stores         = []
-          backups_stores_options = @options.clone
+          backups_stores_options = Hash.new.merge @options
           (backups_stores_options[:stores][:backups] || []).each do |store_option|
             backup_store_options           = @options.clone
             backup_store_options[:storage] = store_option[:storage]
