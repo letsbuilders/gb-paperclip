@@ -7,7 +7,11 @@ module Paperclip
       self.original_filename = @target.original_filename
       @size                  = @target.size
       @tempfile              = copy_to_tempfile(@target)
-      @target.rewind
+      begin
+        @target.rewind
+      rescue
+        nil
+      end
       @content_type = @target.content_type
     end
   end
