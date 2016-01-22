@@ -4,7 +4,7 @@ module Paperclip
       def self.extended base
         base.instance_eval do
 
-          main_store_options           = @options.clone
+          main_store_options           = Hash.new.merge @options
           main_store_options[:storage] = main_store_options[:stores][:main][:storage]
           main_store_options           = main_store_options.merge(main_store_options[:stores][:main])
           main_store_options.delete :stores
@@ -12,7 +12,7 @@ module Paperclip
           @main_store               = Paperclip::Storage::StorageProxy.new main_store_options, self
           @options[:url]            = @main_store.options[:url]
           @additional_stores        = []
-          additional_stores_options = @options.clone
+          additional_stores_options = Hash.new.merge @options
           (additional_stores_options[:stores][:additional] || []).each do |store_option|
             additional_store_options           = Hash.new.merge @options
             additional_store_options[:storage] = store_option[:storage]
@@ -22,7 +22,7 @@ module Paperclip
           @backup_stores         = []
           backups_stores_options = Hash.new.merge @options
           (backups_stores_options[:stores][:backups] || []).each do |store_option|
-            backup_store_options           = @options.clone
+            backup_store_options           = Hash.new.merge @options
             backup_store_options[:storage] = store_option[:storage]
             @backup_stores << Paperclip::Storage::StorageProxy.new(backup_store_options.merge(store_option), self)
           end
@@ -82,7 +82,7 @@ module Paperclip
           end).abort_on_exception = false
           threads << thr
         end
-        @main_store.queued_for_write = @queued_for_write.clone
+        @main_store.queued_for_write = Hash.new.merge @queued_for_write
         @main_store.flush_writes
         critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
         while critical_threads.any?
@@ -112,7 +112,7 @@ module Paperclip
 
       def flush_deletes #:nodoc:
         @additional_stores.each do |store|
-          store.queued_for_delete = @queued_for_delete.clone
+          store.queued_for_delete = Hash.new.merge @queued_for_delete
           Thread.new do
             begin
               ActiveRecord::Base.connection_pool.with_connection do
@@ -124,7 +124,7 @@ module Paperclip
           end
         end
 
-        @main_store.queued_for_delete = @queued_for_delete.clone
+        @main_store.queued_for_delete = Hash.new.merge @queued_for_delete
         @main_store.flush_deletes
 
         @queued_for_delete = []
