@@ -73,13 +73,12 @@ module Paperclip
           raise error if error
           sleep 0.1
         end
-        after_flush_writes
-        @queued_for_write = {}
+        @queued_for_write
       end
 
       def flush_deletes #:nodoc:
         @additional_stores.each do |store|
-          store.queued_for_delete = Hash.new.merge @queued_for_delete
+          store.queued_for_delete = [] + @queued_for_delete
           Thread.new do
             begin
               ActiveRecord::Base.connection_pool.with_connection do
@@ -91,7 +90,7 @@ module Paperclip
           end
         end
 
-        @main_store.queued_for_delete = Hash.new.merge @queued_for_delete
+        @main_store.queued_for_delete = [] + @queued_for_delete
         @main_store.flush_deletes
 
         @queued_for_delete = []
@@ -132,13 +131,17 @@ module Paperclip
       private
 
       def set_write_queue_for_stores
-        backup_queued_for_write = Hash.new.merge(@queued_for_write).delete_if { |style, _| style != :original }
-        @backup_stores.each do |store|
-          store.queued_for_write = backup_queued_for_write
-        end
-        @main_store.queued_for_write = Hash.new.merge @queued_for_write
-        @additional_stores.each do |store|
-          store.queued_for_write = @queued_for_write
+        with_lock do
+          backup_queued_for_write = Hash.new.merge(@queued_for_write).delete_if { |style, _| style != :original }
+          @backup_stores.each do |store|
+            store.queued_for_write = backup_queued_for_write
+          end
+          @main_store.queued_for_write = Hash.new.merge @queued_for_write
+          @additional_stores.each do |store|
+            store.queued_for_write = @queued_for_write
+          end
+          after_flush_writes
+          @queued_for_write = {}
         end
       end
 

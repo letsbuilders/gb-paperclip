@@ -81,6 +81,15 @@ module Paperclip
       def dirty?
         @status_lock.synchronize { super }
       end
+
+      def with_lock(&block)
+        @attributes_lock.lock
+        begin
+          block.call
+        ensure
+          @attributes_lock.unlock
+        end
+      end
     end
 
     prepend SaveExtension
