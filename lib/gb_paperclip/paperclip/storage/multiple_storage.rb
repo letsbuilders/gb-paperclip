@@ -29,14 +29,17 @@ module Paperclip
         end
       end
 
+      # @return [Paperclip::Storage::Proxy]
       def main_store
         @main_store
       end
 
+      # @return [Array<Paperclip::Storage::Proxy>]
       def additional_stores
         @additional_stores
       end
 
+      # @return [Array<Paperclip::Storage::Proxy>]
       def backup_stores
         @backup_stores
       end
@@ -46,67 +49,31 @@ module Paperclip
       end
 
       def flush_writes #:nodoc:
-        threads          =[]
         critical_threads = []
+        set_write_queue_for_stores
         @backup_stores.each do |store|
-          backup_queued_for_write = Hash.new.merge(@queued_for_write).delete_if { |style, _| style != :original }
-          store.queued_for_write  = backup_queued_for_write
           if @backup_sync
             store.flush_writes
           else
-            (thr = Thread.new do
-              begin
-                ActiveRecord::Base.connection_pool.with_connection do
-                  store.flush_writes
-                end
-              rescue Exception => e
-                Thread.current[:error] = e
-              ensure
-                ActiveRecord::Base.clear_active_connections!
-              end
-            end).abort_on_exception = false
-            threads << thr
+            thr = on_new_thread do
+              store.flush_writes
+            end
             critical_threads << thr
           end
         end
         @additional_stores.each do |store|
-          store.queued_for_write  = @queued_for_write
-          (thr = Thread.new do
-            begin
-              ActiveRecord::Base.connection_pool.with_connection do
-                store.flush_writes
-              end
-            ensure
-              ActiveRecord::Base.clear_active_connections!
-            end
-          end).abort_on_exception = false
-          threads << thr
+          on_new_thread do
+            store.flush_writes
+          end
         end
-        @main_store.queued_for_write = Hash.new.merge @queued_for_write
         @main_store.flush_writes
-        critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
         while critical_threads.any?
+          critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
           error = critical_threads.select { |thread| thread[:error] }.first
           raise error if error
           sleep 0.1
-          critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
         end
-        threads.delete_if { |thread| !thread.alive? }
-        if threads.any?
-          Thread.new do
-            while threads.any?
-              sleep 0.1
-              threads.delete_if { |thread| !thread.alive? }
-            end
-            ActiveRecord::Base.connection_pool.with_connection do
-              after_flush_writes
-            end
-            ActiveRecord::Base.clear_active_connections!
-          end
-        else
-          after_flush_writes
-        end
-
+        after_flush_writes
         @queued_for_write = {}
       end
 
@@ -160,6 +127,34 @@ module Paperclip
         else
           super
         end
+      end
+
+      private
+
+      def set_write_queue_for_stores
+        backup_queued_for_write = Hash.new.merge(@queued_for_write).delete_if { |style, _| style != :original }
+        @backup_stores.each do |store|
+          store.queued_for_write = backup_queued_for_write
+        end
+        @main_store.queued_for_write = Hash.new.merge @queued_for_write
+        @additional_stores.each do |store|
+          store.queued_for_write = @queued_for_write
+        end
+      end
+
+      def on_new_thread(&block)
+        (thr = Thread.new do
+          begin
+            ActiveRecord::Base.connection_pool.with_connection do
+              block.call
+            end
+          rescue Exception => e
+            Thread.current[:error] = e
+          ensure
+            ActiveRecord::Base.clear_active_connections!
+          end
+        end).abort_on_exception = false
+        thr
       end
     end
   end
