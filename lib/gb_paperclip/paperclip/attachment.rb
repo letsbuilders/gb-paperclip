@@ -7,22 +7,25 @@ module Paperclip
         @processor_info_lock = Mutex.new
         @status_lock         = Mutex.new
         @attributes_lock     = Mutex.new
+        @save_lock           = Mutex.new
         super
       end
 
       def save
-        @status_lock.lock
-        begin
-          @is_saving        = true
-          @attributes_lock.synchronize do
-            @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+        with_save_lock do
+          @status_lock.lock
+          begin
+            @is_saving = true
+            @attributes_lock.synchronize do
+              @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
+            end
+            result = super
+          ensure
+            @status_lock.unlock
           end
-          result = super
-        ensure
-          @status_lock.unlock
+          @status_lock.synchronize { @is_saving = false }
+          result
         end
-        @status_lock.synchronize { @is_saving = false }
-        result
       end
 
       def is_saving?
@@ -86,6 +89,24 @@ module Paperclip
         @attributes_lock.lock
         begin
           block.call
+        ensure
+          @attributes_lock.unlock
+        end
+      end
+
+      def with_save_lock(&block)
+        @save_lock.lock
+        begin
+          block.call
+        ensure
+          @save_lock.unlock
+        end
+      end
+
+      def change_queued_for_write(&block)
+        @attributes_lock.lock
+        begin
+          block.call(@queued_for_write)
         ensure
           @attributes_lock.unlock
         end
@@ -172,22 +193,24 @@ module Paperclip
     end
 
     def save_processing_info
-      begin
-        @processor_info_lock.lock
-        @processed_styles ||= []
-        if @processor_tracker.count == 0
-          if is_dirty? && !is_saving?
-            instance.processing       = false
-            instance.processed_styles = @processed_styles
-          else
-            instance.run_paperclip_callbacks(:async_post_process) do
-              instance.update_column :processing, false
-              instance.update_column :processed_styles, @processed_styles
+      with_save_lock do
+        begin
+          @processor_info_lock.lock
+          @processed_styles ||= []
+          if @processor_tracker.count == 0
+            if is_dirty?
+              instance.processing       = false
+              instance.processed_styles = @processed_styles
+            else
+              instance.run_paperclip_callbacks(:async_post_process) do
+                instance.update_column :processing, false
+                instance.update_column :processed_styles, @processed_styles
+              end
             end
           end
+        ensure
+          @processor_info_lock.unlock
         end
-      ensure
-        @processor_info_lock.unlock
       end
     end
   end

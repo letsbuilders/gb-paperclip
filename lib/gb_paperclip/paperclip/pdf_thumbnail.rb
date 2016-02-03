@@ -79,12 +79,23 @@ module Paperclip
       while @attachment.is_saving?
         sleep 0.01
       end
-      @attachment.queued_for_write[@style] = Paperclip.io_adapters.for(dst) if dst
-      if @attachment.is_dirty?
-        @attachment.finished_processing @style
-      else
-        GBDispatch.dispatch_async_on_queue(:paperclip_upload) { @attachment.flush_writes }
-        @attachment.finished_processing @style
+      @attachment.change_queued_for_write do |queue|
+        queue[@style] = Paperclip.io_adapters.for(dst) if dst
+      end
+      @attachment.with_save_lock do
+        if @attachment.is_dirty?
+          @attachment.finished_processing @style
+        else
+          GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
+            begin
+              @attachment.flush_writes
+              @attachment.finished_processing @style
+            rescue Exception => e
+              @attachment.failed_processing @style
+              raise e
+            end
+          end
+        end
       end
 
       unlink_files @safe_copy, dst

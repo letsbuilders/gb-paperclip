@@ -307,6 +307,7 @@ module Paperclip
             write_options.merge!(@s3_headers)
 
             s3_object(style).upload_file(file.to_tempfile, write_options)
+            log("saved #{path(style)} to #{bucket_name} with #{write_options}")
           rescue Aws::S3::Errors::NoSuchBucket
             create_bucket
             retry
