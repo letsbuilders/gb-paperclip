@@ -1,3 +1,4 @@
+require 'paperclip/thumbnail'
 require 'gb_paperclip/paperclip/thumbnail'
 require 'gb_paperclip/paperclip/attachment'
 require 'gb_paperclip/paperclip/fake_geometry'
@@ -5,12 +6,10 @@ require 'gb_dispatch'
 
 module Paperclip
   class PdfThumbnail < Paperclip::Thumbnail
-    include ::NewRelic::Agent::Instrumentation::ControllerInstrumentation
 
     attr_accessor :style
 
     def initialize(file, options = {}, attachment = nil)
-      NewRelic::Agent.manual_start unless NewRelic::Agent.agent
       options[:file_geometry_parser] = FakeGeometry
       super
       @file                          = file
@@ -124,8 +123,5 @@ module Paperclip
         file.unlink if file.respond_to?(:unlink) && file.path.present? && File.exist?(file.path)
       end
     end
-
-    add_transaction_tracer :current_geometry
-    add_transaction_tracer :process_thumbnails
   end
 end
