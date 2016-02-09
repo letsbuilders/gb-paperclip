@@ -32,6 +32,8 @@ module ModelReconstruction
       table.column :avatar_file_size, :integer
       table.column :avatar_updated_at, :datetime
       table.column :avatar_fingerprint, :string
+      table.column :processing, :boolean
+      table.column :processed_styles, :string, array: true
     end
     rebuild_class options
   end
