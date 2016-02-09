@@ -34,7 +34,7 @@ module Paperclip
 
           @s3_storage_class = set_storage_class(@options[:s3_storage_class])
 
-          @s3_server_side_encryption = :aes256
+          @s3_server_side_encryption = :AES256
           if @options[:s3_server_side_encryption].blank?
             @s3_server_side_encryption = false
           end
@@ -75,10 +75,20 @@ module Paperclip
         @@s3_lock
       end
 
-      def obtain_s3_instance_for(options)
+      def with_s3_lock(&block)
         s3_lock.lock
-        result = s3_instances[options] ||= Aws::S3::Client.new(options)
-        s3_lock.unlock
+        begin
+          block.call
+        ensure
+          s3_lock.unlock
+        end
+      end
+
+      def obtain_s3_instance_for(options)
+        result = nil
+        with_s3_lock do
+          result = s3_instances[options] ||= Aws::S3::Client.new(options)
+        end
         result
       end
 
@@ -118,7 +128,7 @@ module Paperclip
           region = region.call(self) if @region.is_a?(Proc)
         elsif s3_credentials[:s3_region]
           region = s3_credentials[:s3_region]
-        elsif @options[:s3_host_name]
+        elsif @options[:s3_host_name] || s3_credentials[:s3_host_name]
           region = s3_host_name.split('.').first
           region = region.split('-')
           region.delete_if { |str| str == 's3' }
@@ -293,7 +303,7 @@ module Paperclip
             end
 
             if @s3_server_side_encryption
-              write_options.merge! @s3_server_side_encryption
+              write_options.merge! server_side_encryption: @s3_server_side_encryption.to_s
             end
 
             style_specific_options = styles[style]
