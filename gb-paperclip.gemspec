@@ -40,4 +40,5 @@ Gem::Specification.new do |s|
   #s.add_development_dependency('actionmailer', '>= 3.0.0')
   s.add_development_dependency('generator_spec')
   s.add_development_dependency('timecop')
+  s.add_development_dependency('rubyzip')
 end
