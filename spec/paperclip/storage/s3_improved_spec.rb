@@ -1473,6 +1473,56 @@ describe Paperclip::Storage::S3Improved do
         end
       end
     end
+
+    context 'Generating a secure url with an expiration' do
+      before do
+        @build_model_with_options = lambda { |options|
+          base_options = {
+              storage:        :s3_improved,
+              s3_credentials: {
+                  production:  { bucket: 'prod_bucket' },
+                  development: { bucket: 'dev_bucket' }
+              },
+              s3_host_alias:  'something.something.com',
+              s3_permissions: 'private',
+              path:           ':attachment/:basename:dotextension',
+              url:            ':s3_alias_url'
+          }
+
+          rebuild_model base_options.merge(options)
+        }
+      end
+
+      it 'for default style' do
+        @build_model_with_options[{}]
+
+        rails_env('production') do
+          @dummy        = Dummy.new
+          @dummy.avatar = stringy_file
+
+          object = stub
+          @dummy.avatar.stubs(:s3_object).returns(object)
+          object.expects(:url_for).with(:read, expires: 3600, secure: true, response_content_disposition: "attachment;filename=\"testname.png\";")
+
+          @dummy.avatar.expiring_url_with_name 3600, 'testname.png'
+        end
+      end
+
+      it 'for any style' do
+        @build_model_with_options[{}]
+
+        rails_env('production') do
+          @dummy        = Dummy.new
+          @dummy.avatar = stringy_file
+
+          object = stub
+          @dummy.avatar.stubs(:s3_object).returns(object)
+          object.expects(:url_for).with(:read, expires: 3600, secure: true, response_content_disposition: "attachment;filename=\"testname.png\";")
+
+          @dummy.avatar.expiring_url_with_name 3600, 'testname.png', :original
+        end
+      end
+    end
   end
 
   private
