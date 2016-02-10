@@ -193,7 +193,7 @@ module Paperclip
             create_vault
             retry
           rescue Aws::Glacier::Errors::ServiceError => e
-            Rails.logger.info "Amazon glacier SD #{e.message}"
+            log "Amazon glacier SD #{e.message}"
             if retries <= 5
               sleep((2 ** retries) * 0.5)
               retry
@@ -217,7 +217,7 @@ module Paperclip
       end
 
       def flush_deletes #:nodoc:
-        raise ArgumentError.new('Model need to have :glacier_id string field!') unless instance.respond_to? :glacier_ids
+        raise ArgumentError.new('Model need to have :glacier_ids string field!') unless instance.respond_to? :glacier_ids
         for path in @queued_for_delete do
           next unless glacier_ids && glacier_ids[path]
           log("deleting from glacier #{path}")
