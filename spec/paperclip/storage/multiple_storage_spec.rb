@@ -8,20 +8,24 @@ describe Paperclip::Storage::MultipleStorage do
                     stores:  {
                         main:        {
                             storage: :fake,
-                            foo:     :main
+                            foo:     :main,
                         },
                         backups:     [
                                          { storage: :fake, foo: :backup1 },
                                          { storage: :fake, foo: :backup2, path:
-                                                    ':class/:hash_:style_foo.:extension' },
+                                                    ':class/:hash_:style_foo.:extension', bar: :bar },
                                      ],
                         additional:  [
                                          { storage: :fake, foo: :additional1, path: ':id_:style.:extension' },
                                          { storage: :fake, foo: :additional2, path: ':style_id.:extension' },
                                      ],
-                        path:        ':extension/:id/:style.:extension',
-                        hash_secret: '5613genies'
-                    }
+
+                    },
+                    backup_form: :sync,
+                    path: ':extension/:id/:style.:extension',
+                    hash_secret: '5613genies',
+                    bar: :test
+
 
       @dummy  = Dummy.new
       @avatar = @dummy.avatar
