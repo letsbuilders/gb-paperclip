@@ -28,10 +28,15 @@ module Paperclip
         @deleted ||= []
       end
 
+      def save_thread
+        @save_thread
+      end
+
       def flush_writes
+        @save_thread = Thread.current
         @queued_for_write.each do |style_name, path|
           sleep(sleep_time) unless sleep_time == 0
-          saved[style_name, path]
+          saved[style_name] = path
           log("fake save #{style_name} to #{path}")
         end
         after_flush_writes # allows attachment to clean up temp files
