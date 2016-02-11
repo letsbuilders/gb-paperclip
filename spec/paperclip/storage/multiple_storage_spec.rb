@@ -166,6 +166,13 @@ describe Paperclip::Storage::MultipleStorage do
         @avatar.additional_stores.each { |store| expect(store.save_thread).not_to eq Thread.current }
       end
 
+      context 'asynchronous backup' do
+        it 'should handle save errors' do
+          @avatar.backup_stores.last.stubs(:flush_writes).raises(ArgumentError.new 'backup failed!')
+          expect { @avatar.flush_writes }.to raise_error ArgumentError, 'backup failed!'
+        end
+      end
+
       context 'queued_for_write' do
         it 'should call lock when copying queues for write' do
           @avatar.expects(:with_lock).with(anything)

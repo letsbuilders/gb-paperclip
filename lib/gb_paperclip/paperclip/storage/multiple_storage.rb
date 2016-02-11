@@ -69,8 +69,8 @@ module Paperclip
         @main_store.flush_writes
         while critical_threads.any?
           critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
-          error = critical_threads.select { |thread| thread[:error] }.first
-          raise error if error
+          thread_with_error = critical_threads.select { |thread| thread[:error] }.first
+          raise thread_with_error[:error] if thread_with_error
           sleep 0.1
         end
         @queued_for_write
