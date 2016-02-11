@@ -18,7 +18,7 @@ module Paperclip
       def quarantine_directory
         path = 'tmp/quarantine'
         unless Dir.exists? path
-          FileUtils.create 'tmp' unless Dir.exists? 'tmp'
+          FileUtils.mkdir 'tmp' unless Dir.exists? 'tmp'
           FileUtils.mkdir path
         end
         path

@@ -16,6 +16,10 @@ describe Paperclip::Storage::StorageProxy do
     expect(proxy).to be_a(Paperclip::Storage::Filesystem)
   end
 
+  it 'should not initialize if store does not exists' do
+    expect { Paperclip::Storage::StorageProxy.new(@options.merge(storage: :xyz), @dummy.avatar) }.to raise_error Paperclip::Errors::StorageMethodNotFound
+  end
+
   it 'should proxy methods to parent' do
     stub_parent = stub
     proxy       = Paperclip::Storage::StorageProxy.new(@options, stub_parent)

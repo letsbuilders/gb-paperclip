@@ -11,11 +11,10 @@ require 'simplecov'
 
 SimpleCov.start do
   add_filter '/spec/'
-  add_group 'Library core', 'lib/'
+  add_group 'Library core', %w(lib\/[^\/]*\.rb lib\/gb_paperclip\/[^\/]*\.rb)
+  add_group 'Paperclip extensions', 'lib\/gb_paperclip\/paperclip\/[^\/]*\.rb'
   add_group 'IO Adapters', 'lib/gb_paperclip/paperclip/io_adapters'
   add_group 'Storage', 'lib/gb_paperclip/paperclip/storage'
-  add_group 'Paperclip extensions', 'lib/gb_paperclip/paperclip'
-  add_group 'Helpers', 'lib/gb_work_day/helpers'
 end
 
 SimpleCov.minimum_coverage 90
@@ -48,5 +47,8 @@ RSpec.configure do |config|
   config.mock_framework = :mocha
   config.before(:all) do
     rebuild_model
+  end
+  config.after(:all) do
+    FileUtils.rm_r Pathname.new(ROOT).join('tmp')
   end
 end

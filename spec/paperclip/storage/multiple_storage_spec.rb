@@ -213,6 +213,18 @@ describe Paperclip::Storage::MultipleStorage do
       end
     end
 
+    context 'method missing' do
+      before(:each) do
+        @dummy  = Dummy.create!
+        @avatar = @dummy.avatar
+      end
+
+      it 'should try to call main store if it respond to method' do
+        @avatar.main_store.expects(:options_foo)
+        @avatar.options_foo
+      end
+    end
+
     context 'flush_deletes' do
       before(:each) do
         @dummy  = Dummy.create!
@@ -229,11 +241,13 @@ describe Paperclip::Storage::MultipleStorage do
       it 'should invoke flush_deletes on all stores but not backup' do
         stores = [@avatar.main_store, @avatar.additional_stores].flatten
         stores.each do |store|
+          store.sleep_time = 0
           store.expects(:flush_deletes)
         end
         @avatar.backup_stores.each do |store|
           store.expects(:flush_deletes).never
         end
+        sleep(0.03)
         @avatar.flush_deletes
       end
 
