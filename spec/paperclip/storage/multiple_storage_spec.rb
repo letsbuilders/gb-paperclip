@@ -212,5 +212,123 @@ describe Paperclip::Storage::MultipleStorage do
         end
       end
     end
+
+    context 'flush_deletes' do
+      before(:each) do
+        @dummy  = Dummy.create!
+        @avatar = @dummy.avatar
+      end
+
+      it 'should clean queued for delete after run' do
+        @avatar.instance_variable_set :@queued_for_delete, [:foo, :bar]
+        @avatar.flush_deletes
+        queue = @avatar.instance_variable_get :@queued_for_delete
+        expect(queue).to be_empty
+      end
+
+      it 'should invoke flush_deletes on all stores but not backup' do
+        stores = [@avatar.main_store, @avatar.additional_stores].flatten
+        stores.each do |store|
+          store.expects(:flush_deletes)
+        end
+        @avatar.backup_stores.each do |store|
+          store.expects(:flush_deletes).never
+        end
+        @avatar.flush_deletes
+      end
+
+      it 'should invoke delete on proper threads' do
+        @avatar.flush_deletes
+        expect(@avatar.main_store.delete_thread).to eq Thread.current
+        @avatar.additional_stores.each do |store|
+          expect(store.delete_thread).not_to eq Thread.current
+        end
+      end
+
+      it 'should use copy of queued_for_delete' do
+        stores = [@avatar.main_store, @avatar.additional_stores].flatten
+        stores.each do |store|
+          store.instance_eval 'def flush_deletes; end'
+        end
+        @avatar.instance_variable_set :@queued_for_delete, [:foo, :bar]
+        queue = @avatar.instance_variable_get :@queued_for_delete
+        @avatar.flush_deletes
+        stores.each do |store|
+          expect(store.queued_for_delete).to eq queue #have the same content
+          expect(store.queued_for_delete).not_to equal queue #be different instance
+        end
+      end
+    end
+
+    context 'copy_to_local_file' do
+      before(:each) do
+        @dummy  = Dummy.create!
+        @avatar = @dummy.avatar
+      end
+
+      it 'should try to copy using main store' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(:foo)
+        [@avatar.additional_stores, @avatar.backup_stores].flatten.each do |store|
+          store.expects(:copy_to_local_file).never
+        end
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'if copying for main store it should back to additional stores - first passing' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).returns(true)
+        @avatar.additional_stores.last.expects(:copy_to_local_file).never
+        @avatar.backup_stores.each do |store|
+          store.expects(:copy_to_local_file).never
+        end
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'if copying for main store it should back to additional stores - last passing' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
+        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(true)
+        @avatar.backup_stores.each do |store|
+          store.expects(:copy_to_local_file).never
+        end
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'if copying for main store it should back to additional stores then to backup' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
+        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
+        @avatar.backup_stores.first.expects(:copy_to_local_file).returns(true)
+        @avatar.backup_stores.last.expects(:copy_to_local_file).never
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'if copying for main store it should back to additional stores then to backup - first fails' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
+        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
+        @avatar.backup_stores.first.expects(:copy_to_local_file).returns(false)
+        @avatar.backup_stores.last.expects(:copy_to_local_file)
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'if copying for main store it should back to additional stores then to backup - first crashes' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
+        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
+        @avatar.backup_stores.first.expects(:copy_to_local_file).raises('test error')
+        @avatar.backup_stores.last.expects(:copy_to_local_file)
+        @avatar.copy_to_local_file(:original, 'test.png')
+      end
+
+      it 'should return false if all stores fails' do
+        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
+        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
+        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
+        @avatar.backup_stores.first.expects(:copy_to_local_file).raises('test error')
+        @avatar.backup_stores.last.expects(:copy_to_local_file).returns(nil)
+        expect(@avatar.copy_to_local_file(:original, 'test.png')).to eq false
+      end
+    end
   end
 end

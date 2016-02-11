@@ -32,6 +32,10 @@ module Paperclip
         @save_thread
       end
 
+      def delete_thread
+        @delete_thread
+      end
+
       def flush_writes
         @save_thread = Thread.current
         @queued_for_write.each do |style_name, path|
@@ -44,9 +48,10 @@ module Paperclip
       end
 
       def flush_deletes
+        @delete_thread = Thread.current
         @queued_for_delete.each do |path|
           sleep(sleep_time) unless sleep_time == 0
-          @deleted << path
+          deleted << path
           log "deleted #{path}"
         end
         @queued_for_delete = []
