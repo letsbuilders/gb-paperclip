@@ -86,7 +86,7 @@ describe Paperclip::PdfThumbnail do
 
         it 'sends the right command to convert when sent #make' do
           @thumb.expects(:convert).with do |*arg|
-            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39" +repage :dest' &&
+            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
                 arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
           end
           @thumb.make
@@ -121,7 +121,7 @@ describe Paperclip::PdfThumbnail do
 
         it 'sends the right command to convert when sent #make' do
           @thumb.expects(:convert).with do |*arg|
-            arg[0] == '-strip :source -auto-orient -resize "100x" -crop "100x50+0+39" +repage :dest' &&
+            arg[0] == '-strip :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
                 arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
           end
           @thumb.make
@@ -162,7 +162,7 @@ describe Paperclip::PdfThumbnail do
 
         it 'sends the right command to convert when sent #make' do
           @thumb.expects(:convert).with do |*arg|
-            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39" +repage -strip -depth 8 :dest' &&
+            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage -strip -depth 8 :dest' &&
                 arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
           end
           @thumb.make
@@ -251,7 +251,7 @@ describe Paperclip::PdfThumbnail do
 
           assert transformation_command.include?('-crop'),
                  %{expected #{transformation_command.inspect} to include '-crop'}
-          assert transformation_command.include?('"CROP"'),
+          assert transformation_command.include?('"CROP!"'),
                  %{expected #{transformation_command.inspect} to include '"CROP"'}
           assert transformation_command.include?('-resize'),
                  %{expected #{transformation_command.inspect} to include '-resize'}
