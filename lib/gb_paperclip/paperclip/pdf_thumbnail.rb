@@ -7,30 +7,30 @@ require 'gb_dispatch'
 module Paperclip
   class PdfThumbnail < Paperclip::Thumbnail
 
-    attr_accessor :style
+    attr_accessor :style, :safe_copy
 
     def initialize(file, options = {}, attachment = nil)
+      @file_geometry_parser          = options[:file_geometry_parser] || Geometry
       options[:file_geometry_parser] = FakeGeometry
       super
-      @file                          = file
-
-      @style = options[:style]
+      @file = file
 
       if @attachment
         src        = @file
-        @safe_copy = Tempfile.new([@basename, @format ? ".#{@format}" : ''])
+        @safe_copy = Tempfile.new([@basename, @current_format])
+        @format    ||= :jpg
         FileUtils.cp src.path, @safe_copy.path, verbose: true
       end
     end
 
     def current_geometry
       unless @current_geometry
-        @current_geometry = Geometry.from_file(@safe_copy)
+        @current_geometry = @file_geometry_parser.from_file(@safe_copy || @file)
         if @auto_orient && @current_geometry.respond_to?(:auto_orient)
           @current_geometry.auto_orient
         end
-        @current_geometry.width  = 1 if @current_geometry.width == 0
-        @current_geometry.height = 1 if @current_geometry.height == 0
+        @current_geometry.width  = 1 if @current_geometry.respond_to?(:width) && @current_geometry.width == 0
+        @current_geometry.height = 1 if @current_geometry.respond_to?(:width) && @current_geometry.height == 0
       end
       @current_geometry
     end
@@ -49,18 +49,18 @@ module Paperclip
     end
 
     def process_thumbnails(source_path)
-      dst = Tempfile.new([@basename, @format ? ".#{@format}" : ''])
+      dst = Tempfile.new([@basename, ".#{@format}"])
       dst.binmode
       begin
         parameters = []
         parameters << source_file_options
         parameters << ['-background white', '-flatten']
-        parameters << ":source"
+        parameters << ':source'
         parameters << transformation_command
         parameters << convert_options
-        parameters << ":dest"
+        parameters << ':dest'
 
-        parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
+        parameters = parameters.flatten.compact.join(' ').strip.squeeze(' ')
 
         success = convert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
       rescue Cocaine::ExitStatusError => e
@@ -70,7 +70,7 @@ module Paperclip
       rescue Cocaine::CommandNotFoundError => e
         @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
-        raise Paperclip::Errors::CommandNotFoundError.new("Could not run the `convert` command. Please install ImageMagick.")
+        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.')
       rescue Exception => e
         unlink_files @safe_copy, dst
         raise e
@@ -109,11 +109,12 @@ module Paperclip
     def transformation_command
       scale, crop = current_geometry.transformation_to(@target_geometry, crop?)
       trans       = []
-      trans << "-coalesce" if animated?
-      trans << "-auto-orient" if auto_orient
-      trans << "-resize" << %["#{scale}"] unless scale.nil? || scale.empty?
-      trans << "-crop" << %["#{crop}"] << "+repage" if crop
+      trans << '-coalesce' if animated?
+      trans << '-auto-orient' if auto_orient
+      trans << '-resize' << %["#{scale}"] unless scale.nil? || scale.empty?
+      trans << '-crop' << %["#{crop}!"] << '+repage' if crop
       trans << '-layers "optimize"' if animated?
+      puts trans.join(' ')
       trans
     end
 

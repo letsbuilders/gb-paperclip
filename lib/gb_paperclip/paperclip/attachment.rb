@@ -8,6 +8,7 @@ module Paperclip
         @status_lock         = Mutex.new
         @attributes_lock     = Mutex.new
         @save_lock           = Mutex.new
+        @processor_tracker   = []
         super
       end
 
@@ -122,9 +123,11 @@ module Paperclip
         @processor_tracker ||= []
         if @processor_tracker.count == 0
           if is_dirty?
-            @instance.processing = true
+            @instance.processing       = true
+            @instance.processed_styles ||= []
           else
             @instance.update_attribute :processing, true
+            @instance.processed_styles ||= []
           end
         end
         @processor_tracker << style
