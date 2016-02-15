@@ -239,6 +239,7 @@ module Paperclip
         block.call
       rescue ActiveRecord::RecordNotFound => e
         if retries < timeout / 0.001
+          retries += 1
           sleep 0.001
           retry
         else

@@ -120,6 +120,41 @@ describe Paperclip::Attachment do
         end
       end
     end
+
+    it 'ensure_is_created should timeout' do
+      flag   = false
+      thread = Thread.new do
+        begin
+          @attachment.send :ensure_is_created, 0.02 do
+            raise ActiveRecord::RecordNotFound
+          end
+        rescue ActiveRecord::RecordNotFound
+          flag = true
+        end
+      end
+      thread.join(0.06)
+      expect(thread.alive?).to be_falsey
+      expect(flag).to eq true
+    end
+
+    context 'saving processing info' do
+      it 'should use save lock' do
+        async_flag = false
+        @attachment.instance_variable_set :@processed_styles, [:foo, :bar]
+        GBDispatch.dispatch_async(:test) do
+          @attachment.with_save_lock do
+            sleep(0.3)
+            async_flag = true
+          end
+        end
+        GBDispatch.dispatch_sync :save do
+          sleep 0.1
+          @attachment.send :save_processing_info
+        end
+        expect(async_flag).to eq true
+        wait_for :test
+      end
+    end
   end
 
   def wait_for(queue)
