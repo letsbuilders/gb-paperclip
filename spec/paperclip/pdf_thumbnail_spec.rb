@@ -672,6 +672,41 @@ describe Paperclip::PdfThumbnail do
         end
       end
     end
+
+    context 'should save attachment' do
+      before(:each) do
+        @file = File.new(fixture_file('twopage.pdf'), 'rb')
+        rebuild_model storage: :fake
+        @dummy        = Dummy.new
+        @dummy.avatar = @file
+        @attachment   = @dummy.avatar
+        @thumb        = Paperclip::PdfThumbnail.new(@file, { geometry: '100x50#', style: :test }, @attachment)
+      end
+
+      after(:each) do
+        @file.close
+      end
+
+      it 'should wait if files being saved right now' do
+        @attachment.instance_variable_set :@is_saving, true
+        @attachment.instance_variable_set :@dirty, false
+        @thumb.make
+        sleep(0.5)
+        expect(@attachment.saved[:test]).to be_nil
+        @attachment.instance_variable_set :@is_saving, false
+        wait_for_make
+        wait_for_save
+        expect(@attachment.saved[:test]).to be_truthy
+      end
+
+      it 'should save files if attachment is not dirty' do
+        @attachment.instance_variable_set :@dirty, false
+        @thumb.make
+        wait_for_make
+        wait_for_save
+        expect(@attachment.saved[:test]).to be_truthy
+      end
+    end
   end
 
   def stub_attachment
