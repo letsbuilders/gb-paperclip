@@ -6,6 +6,7 @@ module ModelReconstruction
 
     klass.class_eval do
       include Paperclip::Glue
+      serialize :processed_styles, Array
     end
 
     klass.reset_column_information
@@ -33,7 +34,7 @@ module ModelReconstruction
       table.column :avatar_updated_at, :datetime
       table.column :avatar_fingerprint, :string
       table.column :processing, :boolean
-      table.column :processed_styles, :string, array: true
+      table.column :processed_styles, :text
     end
     rebuild_class options
   end

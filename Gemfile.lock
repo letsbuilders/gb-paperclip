@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     gb_paperclip (0.3.10)
-      gb_dispatch (~> 0.0.1)
+      gb_dispatch (>= 0.0.2)
       paperclip (>= 4.2.0)
 
 GEM
@@ -180,7 +180,7 @@ GEM
       fog-core
       nokogiri (~> 1.5, >= 1.5.11)
     formatador (0.2.4)
-    gb_dispatch (0.0.1)
+    gb_dispatch (0.0.3)
       celluloid (~> 0.15.2)
     generator_spec (0.9.3)
       activesupport (>= 3.0.0)

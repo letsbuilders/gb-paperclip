@@ -86,6 +86,15 @@ module Paperclip
         @status_lock.synchronize { super }
       end
 
+      def is_new?
+        @status_lock.lock
+        begin
+          @instance.new_record? && !@instance.persisted?
+        ensure
+          @status_lock.unlock
+        end
+      end
+
       def with_lock(&block)
         @attributes_lock.lock
         begin
@@ -122,12 +131,15 @@ module Paperclip
         @processor_info_lock.lock
         @processor_tracker ||= []
         if @processor_tracker.count == 0
-          if is_dirty?
+          if is_dirty? || is_new?
             @instance.processing       = true
             @instance.processed_styles ||= []
           else
-            @instance.update_attribute :processing, true
-            @instance.processed_styles ||= []
+            ensure_is_created do
+              @instance.lock!
+              @instance.update_attribute :processing, true
+              @instance.processed_styles ||= []
+            end
           end
         end
         @processor_tracker << style
@@ -201,18 +213,36 @@ module Paperclip
           @processor_info_lock.lock
           @processed_styles ||= []
           if @processor_tracker.count == 0
-            if is_dirty?
+            if is_dirty? || is_new?
               instance.processing       = false
               instance.processed_styles = @processed_styles
             else
               instance.run_paperclip_callbacks(:async_post_process) do
-                instance.update_column :processing, false
-                instance.update_column :processed_styles, @processed_styles
+                ensure_is_created do
+                  instance.with_lock do
+                    instance.update_column :processing, false
+                    instance.update_column :processed_styles, @processed_styles
+                  end
+                end
               end
             end
           end
         ensure
           @processor_info_lock.unlock
+        end
+      end
+    end
+
+    def ensure_is_created(timeout=5.0, &block)
+      retries = 0
+      begin
+        block.call
+      rescue ActiveRecord::RecordNotFound => e
+        if retries < timeout / 0.001
+          sleep 0.001
+          retry
+        else
+          raise e
         end
       end
     end
