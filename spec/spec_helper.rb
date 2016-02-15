@@ -48,6 +48,9 @@ RSpec.configure do |config|
   config.before(:all) do
     rebuild_model
   end
+  config.after(:each) do
+    ActiveRecord::Base.clear_reloadable_connections!
+  end
   config.after(:all) do
     FileUtils.rm_r Pathname.new(ROOT).join('tmp')
   end

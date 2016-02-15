@@ -26,6 +26,7 @@ describe Paperclip::Attachment do
         @attachment.save
       end
       expect(async_flag).to eq true
+      wait_for :test
     end
 
     it 'should use status lock' do
@@ -112,14 +113,18 @@ describe Paperclip::Attachment do
             sleep(0.1)
             expect { dummy.avatar.processing(:test_style) }.not_to raise_error
           end
-          GBDispatch.dispatch_sync(:save) do
-            puts 'wait for save'
-          end
+          wait_for :save
           expect(dummy.avatar.saved[:original]).not_to be_nil
           expect(dummy.changes.keys.any?).to be_falsey
           expect(dummy.reload.processing).to eq true
         end
       end
+    end
+  end
+
+  def wait_for(queue)
+    GBDispatch.dispatch_sync_on_queue queue do
+      puts "waiting for #{queue}"
     end
   end
 end
