@@ -623,22 +623,6 @@ describe Paperclip::PdfThumbnail do
       end
 
       context 'should call failed processing style if' do
-        # it 'avprobe not exists' do
-        #   @attachment.expects(:failed_processing).with(:test)
-        #   @thumb.stubs(:get_duration).with(anything).raises(Cocaine::CommandNotFoundError.new '')
-        #   expect { @thumb.make }.not_to raise_error Paperclip::Errors::CommandNotFoundError
-        #   wait_for_make
-        #   wait_for_save
-        # end
-        #
-        # it 'avconv not exists' do
-        #   @attachment.expects(:failed_processing).with(:test)
-        #   @thumb.stubs(:create_image).with(anything).raises(Cocaine::CommandNotFoundError.new '')
-        #   expect { @thumb.make }.not_to raise_error Paperclip::Errors::CommandNotFoundError
-        #   wait_for_make
-        #   wait_for_save
-        # end
-        #
         it 'image magick have wrong params' do
           @attachment.expects(:failed_processing).with(:test)
           @thumb.stubs(:convert).with(anything, anything).raises(Cocaine::ExitStatusError.new '')
