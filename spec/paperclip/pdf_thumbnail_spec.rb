@@ -595,6 +595,99 @@ describe Paperclip::PdfThumbnail do
         end
       end
     end
+
+    context 'Attachment processing info' do
+      before(:each) do
+        @file = File.new(fixture_file('twopage.pdf'), 'rb')
+        rebuild_model storage: :fake
+        @dummy      = Dummy.new
+        @attachment = @dummy.avatar
+        @thumb      = Paperclip::PdfThumbnail.new(@file, { geometry: '100x50#', style: :test }, @attachment)
+        wait_for_make
+      end
+
+      after(:each) { @file.close }
+
+      it 'should call finished processing style if successes' do
+        @attachment.expects(:finished_processing).with(:test)
+        @thumb.make
+        wait_for_make
+        wait_for_save
+      end
+
+      it 'should call finished processing style if successes and is_dirty' do
+        @attachment.expects(:finished_processing).with(:test)
+        @attachment.stubs(:is_dirty?).returns(true)
+        @thumb.make
+        wait_for_make
+      end
+
+      context 'should call failed processing style if' do
+        # it 'avprobe not exists' do
+        #   @attachment.expects(:failed_processing).with(:test)
+        #   @thumb.stubs(:get_duration).with(anything).raises(Cocaine::CommandNotFoundError.new '')
+        #   expect { @thumb.make }.not_to raise_error Paperclip::Errors::CommandNotFoundError
+        #   wait_for_make
+        #   wait_for_save
+        # end
+        #
+        # it 'avconv not exists' do
+        #   @attachment.expects(:failed_processing).with(:test)
+        #   @thumb.stubs(:create_image).with(anything).raises(Cocaine::CommandNotFoundError.new '')
+        #   expect { @thumb.make }.not_to raise_error Paperclip::Errors::CommandNotFoundError
+        #   wait_for_make
+        #   wait_for_save
+        # end
+        #
+        it 'image magick have wrong params' do
+          @attachment.expects(:failed_processing).with(:test)
+          @thumb.stubs(:convert).with(anything, anything).raises(Cocaine::ExitStatusError.new '')
+          expect { @thumb.make }.not_to raise_error
+          wait_for_make
+        end
+
+        it 'image magick error' do
+          @thumb.current_geometry
+          @attachment.expects(:failed_processing).with(:test)
+          old_path = ENV['PATH']
+          begin
+            Cocaine::CommandLine.path        = ''
+            Paperclip.options[:command_path] = ''
+            ENV['PATH']                      = ''
+            expect do
+              silence_stream(STDERR) do
+                @thumb.make
+              end
+            end.not_to raise_error Paperclip::Errors::CommandNotFoundError
+            wait_for_make
+          ensure
+            ENV['PATH'] = old_path
+          end
+        end
+
+        it 'convert throws any error' do
+          @attachment.expects(:failed_processing).with(:test)
+          @thumb.stubs(:convert).with(anything, anything).raises('test error')
+          expect { @thumb.make }.not_to raise_error
+          wait_for_make
+        end
+
+        it 'save throws any error' do
+          @attachment.expects(:failed_processing).with(:test)
+          @attachment.stubs(:flush_writes).with(anything).raises('test error')
+          expect { @thumb.make }.not_to raise_error
+          wait_for_make
+          wait_for_save
+        end
+
+        it 'attachment throw error' do
+          @attachment.expects(:failed_processing).with(:test)
+          @attachment.stubs(:is_saving?).raises('test error')
+          @thumb.make
+          wait_for_make
+        end
+      end
+    end
   end
 
   def stub_attachment

@@ -39,7 +39,7 @@ module Paperclip
       if @attachment
         queue = @style ? "paperclip_#{@style}" : :paperclip
         GBDispatch.dispatch_async_on_queue queue do
-          source_path = "#{File.expand_path(@safe_copy.path)}#{'[0]' unless animated?}"
+          source_path = "#{File.expand_path(@safe_copy.path)}"
           process_thumbnails source_path
         end
         nil
@@ -60,7 +60,9 @@ module Paperclip
         parameters << convert_options
         parameters << ':dest'
 
-        parameters = parameters.flatten.compact.join(' ').strip.squeeze(' ')
+        parameters  = parameters.flatten.compact.join(' ').strip.squeeze(' ')
+
+        source_path +='[0]' unless animated?
 
         success = convert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
       rescue Cocaine::ExitStatusError => e
@@ -72,36 +74,39 @@ module Paperclip
         unlink_files @safe_copy, dst
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.')
       rescue Exception => e
+        @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
         raise e
       end
-      while @attachment.is_saving?
-        sleep 0.01
-      end
-      @attachment.change_queued_for_write do |queue|
-        queue[@style] = Paperclip.io_adapters.for(dst) if dst
-      end
-      @attachment.with_save_lock do
-        if @attachment.is_dirty?
-          @attachment.finished_processing @style
-        else
-          GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
-            begin
-              @attachment.flush_writes
-              @attachment.finished_processing @style
-            rescue Exception => e
-              @attachment.failed_processing @style
-              raise e
+      begin
+        while @attachment.is_saving?
+          sleep 0.01
+        end
+        @attachment.change_queued_for_write do |queue|
+          queue[@style] = Paperclip.io_adapters.for(dst) if dst
+        end
+        @attachment.with_save_lock do
+          if @attachment.is_dirty?
+            @attachment.finished_processing @style
+          else
+            GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
+              begin
+                @attachment.flush_writes
+                @attachment.finished_processing @style
+              rescue Exception => e
+                @attachment.failed_processing @style
+                raise e
+              end
             end
           end
         end
+      rescue Exception => e
+        @attachment.failed_processing @style if @attachment && @style
+        unlink_files @safe_copy, dst
+        raise e
       end
 
       unlink_files @safe_copy, dst
-    rescue Exception => e
-      @attachment.failed_processing @style if @attachment && @style
-      unlink_files @safe_copy, dst
-      raise e
     end
 
     # Returns the command ImageMagick's +convert+ needs to transform the image
@@ -114,7 +119,6 @@ module Paperclip
       trans << '-resize' << %["#{scale}"] unless scale.nil? || scale.empty?
       trans << '-crop' << %["#{crop}!"] << '+repage' if crop
       trans << '-layers "optimize"' if animated?
-      puts trans.join(' ')
       trans
     end
 
