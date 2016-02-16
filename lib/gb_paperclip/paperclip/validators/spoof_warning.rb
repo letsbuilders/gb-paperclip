@@ -1,4 +1,5 @@
 require 'active_model/validations/presence'
+require 'gb_paperclip/media_type_spoof_detector'
 module Paperclip
   module Validators
     class AttachmentSpoofWarningValidator < ActiveModel::EachValidator
