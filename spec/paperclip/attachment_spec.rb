@@ -94,12 +94,14 @@ describe Paperclip::Attachment do
         end
 
         it 'should save if saving on different thread' do
-          class SleepyDummy < Dummy
-            self.table_name = 'dummies'
-            after_save :take_nap
+          unless  defined? SleepyDummy
+            class SleepyDummy < Dummy
+              self.table_name = 'dummies'
+              after_save :take_nap
 
-            def take_nap
-              sleep(0.5)
+              def take_nap
+                sleep(0.5)
+              end
             end
           end
           dummy = nil
@@ -215,6 +217,36 @@ describe Paperclip::Attachment do
         expect(dummy.changes.keys.any?).to be_falsey
         expect(dummy.reload.processing).to eq false
         expect(dummy.processed_styles).to eq [:foo, :bar]
+      end
+    end
+
+    context 'set processing info' do
+      it 'should handle failed processing styles' do
+        @attachment.processing(:fail_test)
+        @attachment.processing(:other)
+        @attachment.failed_processing(:fail_test)
+        expect(@attachment.instance_variable_get :@processor_tracker).not_to include :fail_test
+        expect(@attachment.instance_variable_get :@processor_tracker).to include :other
+      end
+
+      it 'should handle finished style' do
+        @attachment.processing(:processed)
+        @attachment.processing(:other)
+        @attachment.finished_processing :processed
+        expect(@attachment.instance_variable_get :@processor_tracker).not_to include :processed
+        expect(@attachment.instance_variable_get :@processed_styles).to include :processed
+        expect(@attachment.instance_variable_get :@processor_tracker).to include :other
+      end
+
+      it 'should handle all process' do
+        @dummy.save!
+        @attachment.processing(:processed)
+        @attachment.processing(:fail_test)
+        @attachment.failed_processing(:fail_test)
+        @attachment.finished_processing :processed
+        @dummy.reload
+        expect(@dummy.processing).to eq false
+        expect(@dummy.processed_styles).to eq [:processed]
       end
     end
   end
