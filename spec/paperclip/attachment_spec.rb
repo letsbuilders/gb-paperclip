@@ -251,6 +251,19 @@ describe Paperclip::Attachment do
     end
   end
 
+  context 'post process style' do
+    before(:each) do
+      rebuild_model storage: :fake, styles: {thumb: '50x50#'}
+      @dummy        = Dummy.create!
+      @dummy.avatar = @file
+      @attachment   = @dummy.avatar
+    end
+
+    it 'should call processing method' do
+
+    end
+  end
+
   def wait_for(queue)
     GBDispatch.dispatch_sync_on_queue queue do
       puts "waiting for #{queue}"
