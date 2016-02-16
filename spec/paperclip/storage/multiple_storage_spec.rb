@@ -247,8 +247,8 @@ describe Paperclip::Storage::MultipleStorage do
         @avatar.backup_stores.each do |store|
           store.expects(:flush_deletes).never
         end
-        sleep(0.03)
         @avatar.flush_deletes
+        sleep(0.03)
       end
 
       it 'should invoke delete on proper threads' do
