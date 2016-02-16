@@ -236,8 +236,10 @@ module Paperclip
     def ensure_is_created(timeout=5.0, &block)
       retries = 0
       begin
-        block.call
-      rescue ActiveRecord::RecordNotFound => e
+        @instance.class.transaction do
+          block.call
+        end
+      rescue ActiveRecord::RecordNotFound, ActiveRecord::ActiveRecordError => e
         if retries < timeout / 0.001
           retries += 1
           sleep 0.001

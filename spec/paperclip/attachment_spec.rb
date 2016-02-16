@@ -302,7 +302,7 @@ describe Paperclip::Attachment do
         Paperclip::FakeProcessor.raise_error = 'test error'
         @attachment.expects(:failed_processing).with(@style)
         expect { @attachment.post_process_style(:thumb, @style) }.to raise_error
-        Paperclip::FakeProcessor.raise_error = false
+        Paperclip::FakeProcessor.raise_error = nil
       end
     end
   end

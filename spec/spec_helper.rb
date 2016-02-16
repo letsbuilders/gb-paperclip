@@ -14,6 +14,7 @@ SimpleCov.start do
   add_group 'Library core', %w(lib\/[^\/]*\.rb lib\/gb_paperclip\/[^\/]*\.rb)
   add_group 'Paperclip extensions', 'lib\/gb_paperclip\/paperclip\/[^\/]*\.rb'
   add_group 'IO Adapters', 'lib/gb_paperclip/paperclip/io_adapters'
+  add_group 'Validators', 'lib/gb_paperclip/paperclip/validators'
   add_group 'Storage', 'lib/gb_paperclip/paperclip/storage'
 end
 
