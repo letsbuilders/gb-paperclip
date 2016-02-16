@@ -18,7 +18,7 @@ SimpleCov.start do
   add_group 'Storage', 'lib/gb_paperclip/paperclip/storage'
 end
 
-SimpleCov.minimum_coverage 90
+SimpleCov.minimum_coverage 78
 
 ROOT = Pathname(File.expand_path(File.join(File.dirname(__FILE__), '..')))
 

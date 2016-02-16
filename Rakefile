@@ -6,7 +6,7 @@ begin
 rescue LoadError
 end
 
-task :build do #=> :spec do
+task :build => :spec do
   sh 'gem build ./gb-paperclip.gemspec'
 end
 
