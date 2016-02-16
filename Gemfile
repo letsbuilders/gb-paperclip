@@ -1,5 +1,5 @@
 source 'http://rubygems.org'
-ruby '2.2.2'
+ruby '2.3.0'
 
 # Declare your gem's dependencies in push.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
@@ -15,8 +15,7 @@ group :development do
 end
 
 group :test do
-  #gem 'activerecord', :require => 'active_record'
+  gem 'activerecord', :require => 'active_record'
   gem 'sqlite3'
-  gem 'rspec', '>3.0'
   gem 'simplecov', :require => false
 end

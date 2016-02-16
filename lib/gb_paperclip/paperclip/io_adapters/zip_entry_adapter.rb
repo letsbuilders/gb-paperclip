@@ -5,8 +5,8 @@ module Paperclip
     # @param target [Zip::Entry]
     def initialize(target)
       @target                = target
-      @tempfile              = copy_to_tempfile(@target)
       self.original_filename = @target.name.force_encoding("UTF-8").split('/').pop
+      @tempfile              = copy_to_tempfile(@target)
       @size                  = @target.size
       @content_type          = ContentTypeDetector.new(@tempfile.path).detect
     end
@@ -21,7 +21,6 @@ module Paperclip
         end
       end
       destination.rewind
-      puts destination.path
       destination
     end
   end

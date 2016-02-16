@@ -19,6 +19,26 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'paperclip', '>=4.2.0'
-  s.add_dependency 'gb_dispatch', '~> 0.0.1'
+  s.add_dependency 'gb_dispatch', '>= 0.0.2'
   #s.metadata['allowed_push_host'] = 'http://gems.bobisdead.com/'
+  s.add_development_dependency('activerecord', '>= 3.0.0')
+  s.add_development_dependency('shoulda')
+  s.add_development_dependency('rspec', '>=3.0.0')
+  s.add_development_dependency('appraisal')
+  s.add_development_dependency('mocha')
+  s.add_development_dependency('aws-sdk', '>= 2.0.0')
+  s.add_development_dependency('aws-sdk-v1')
+  s.add_development_dependency('bourne')
+  s.add_development_dependency('nokogiri')
+  # Ruby version < 1.9.3 can't install capybara > 2.0.3.
+  s.add_development_dependency('bundler')
+  s.add_development_dependency('fog', '~> 1.0')
+  s.add_development_dependency('launchy')
+  s.add_development_dependency('rake')
+  s.add_development_dependency('fakeweb')
+  s.add_development_dependency('railties')
+  #s.add_development_dependency('actionmailer', '>= 3.0.0')
+  s.add_development_dependency('generator_spec')
+  s.add_development_dependency('timecop')
+  s.add_development_dependency('rubyzip')
 end

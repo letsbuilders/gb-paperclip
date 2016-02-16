@@ -69,8 +69,8 @@ module Paperclip
         @main_store.flush_writes
         while critical_threads.any?
           critical_threads.delete_if { |thread| !thread.alive? && !thread[:error] }
-          error = critical_threads.select { |thread| thread[:error] }.first
-          raise error if error
+          thread_with_error = critical_threads.select { |thread| thread[:error] }.first
+          raise thread_with_error[:error] if thread_with_error
           sleep 0.1
         end
         @queued_for_write
@@ -79,14 +79,8 @@ module Paperclip
       def flush_deletes #:nodoc:
         @additional_stores.each do |store|
           store.queued_for_delete = [] + @queued_for_delete
-          Thread.new do
-            begin
-              ActiveRecord::Base.connection_pool.with_connection do
-                store.flush_deletes
-              end
-            ensure
-              ActiveRecord::Base.clear_active_connections!
-            end
+          on_new_thread do
+            store.flush_deletes
           end
         end
 
@@ -103,7 +97,7 @@ module Paperclip
           begin
             result = store.copy_to_local_file(style, local_dest_path)
           rescue Exception => e
-            Rails.logger.warn("Cannot copy file form additional storage. #{e.message}")
+            log("Cannot copy file form additional storage. #{e.message}")
             result = nil
           end
           return result if result
@@ -112,7 +106,7 @@ module Paperclip
           begin
             result = store.copy_to_local_file(style, local_dest_path)
           rescue Exception => e
-            Rails.logger.warn("Cannot copy file form backup storage. #{e.message}")
+            log("Cannot copy file form backup storage. #{e.message}")
             result = nil
           end
           return result if result
@@ -136,7 +130,7 @@ module Paperclip
           @backup_stores.each do |store|
             store.queued_for_write = backup_queued_for_write
           end
-          @main_store.queued_for_write = Hash.new.merge @queued_for_write
+          @main_store.queued_for_write = @queued_for_write
           @additional_stores.each do |store|
             store.queued_for_write = @queued_for_write
           end
