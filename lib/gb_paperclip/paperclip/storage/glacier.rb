@@ -77,7 +77,7 @@ module Paperclip
       def account_id
         @vault = @options[:account_id] || glacier_credentials[:account_id]
         @vault = @vault.call(self) if @vault.respond_to?(:call)
-        @vault or raise ArgumentError, 'missing required :vault option'
+        @vault or raise ArgumentError, 'missing required :account_id option'
       end
 
       # @return [Aws::Glacier::Client]
