@@ -155,6 +155,67 @@ describe Paperclip::Attachment do
         expect(async_flag).to eq true
         wait_for :test
       end
+
+      it 'should set proper value for new object' do
+        dummy = Dummy.new
+        dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
+        dummy.avatar.send :save_processing_info
+        expect(dummy.processing).to eq false
+        expect(dummy.processed_styles).to eq [:foo, :bar]
+        expect(dummy.new_record?).to be_truthy
+      end
+
+      it 'should set proper value for dirty object' do
+        @dummy.processing = true
+        @dummy.save!
+        @attachment.send :dirty!
+        @attachment.instance_variable_set :@processed_styles, [:foo, :bar]
+        @attachment.send :save_processing_info
+        expect(@dummy.processing).to eq false
+        expect(@dummy.processed_styles).to eq [:foo, :bar]
+        expect(@dummy.changes).to include 'processed_styles', 'processing'
+      end
+
+      it 'should save proper values for saved objects' do
+        @dummy.processing = true
+        @dummy.save!
+        @attachment.instance_variable_set :@processed_styles, [:foo, :bar]
+        @attachment.send :save_processing_info
+        expect(@dummy.changes).not_to include 'processed_styles', 'processing'
+        expect(@dummy.reload.processing).to eq false
+        expect(@dummy.processed_styles).to eq [:foo, :bar]
+      end
+
+      it 'should save if saving on different thread' do
+        unless  defined? SleepyDummy
+          class SleepyDummy < Dummy
+            self.table_name = 'dummies'
+            after_save :take_nap
+
+            def take_nap
+              sleep(0.5)
+            end
+          end
+        end
+        dummy = nil
+        GBDispatch.dispatch_sync(:save) do
+          dummy        = SleepyDummy.new
+          dummy.avatar = @file
+        end
+        GBDispatch.dispatch_async(:save) do
+          dummy.save!
+        end
+        GBDispatch.dispatch_sync(:process) do
+          sleep(0.1)
+          dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
+          expect { dummy.avatar.send :save_processing_info }.not_to raise_error
+        end
+        wait_for :save
+        expect(dummy.avatar.saved[:original]).not_to be_nil
+        expect(dummy.changes.keys.any?).to be_falsey
+        expect(dummy.reload.processing).to eq false
+        expect(dummy.processed_styles).to eq [:foo, :bar]
+      end
     end
   end
 
