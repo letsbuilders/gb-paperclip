@@ -20,7 +20,7 @@ describe Paperclip::VideoThumbnail do
         end
 
         it 'starts with dimensions of 434x66' do
-          cmd = %Q[ffprobe -v error -show_entries stream=width,height -of default=noprint_wrappers=1 "#{@file.path}"]
+          cmd = %Q[avprobe -loglevel error -show_format_entry width -show_format_entry height -show_streams "#{@file.path}"]
           expect(`#{cmd}`.chomp).to eq "width=800\nheight=480"
         end
 
