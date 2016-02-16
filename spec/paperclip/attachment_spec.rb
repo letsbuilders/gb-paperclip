@@ -270,14 +270,40 @@ describe Paperclip::Attachment do
 
   context 'post process style' do
     before(:each) do
-      rebuild_model storage: :fake, styles: {thumb: '50x50#'}
+      rebuild_model storage: :fake, styles: { thumb: '50x50#' }, processors: [:fake_processor]
       @dummy        = Dummy.create!
       @dummy.avatar = @file
       @attachment   = @dummy.avatar
+      @style        = @attachment.styles[:thumb]
     end
 
     it 'should call processing method' do
+      @attachment.expects(:processing).with(@style)
+      @attachment.post_process_style(:thumb, @style)
+      expect(@attachment.queued_for_write[:thumb]).to be
+    end
 
+    it 'should handle nil processor result' do
+      Paperclip::FakeProcessor.return_nil = true
+      @attachment.post_process_style(:thumb, @style)
+      expect(@attachment.queued_for_write.keys).not_to include :thumb
+      Paperclip::FakeProcessor.return_nil = false
+    end
+
+    context 'should call failed processing style on error' do
+      it 'Paperclip::Errors::NotIdentifiedByImageMagickError' do
+        Paperclip::FakeProcessor.raise_error = Paperclip::Errors::NotIdentifiedByImageMagickError.new 'test'
+        @attachment.expects(:failed_processing).with(@style)
+        @attachment.post_process_style(:thumb, @style)
+        Paperclip::FakeProcessor.raise_error = false
+      end
+
+      it 'any error' do
+        Paperclip::FakeProcessor.raise_error = 'test error'
+        @attachment.expects(:failed_processing).with(@style)
+        expect { @attachment.post_process_style(:thumb, @style) }.to raise_error
+        Paperclip::FakeProcessor.raise_error = false
+      end
     end
   end
 

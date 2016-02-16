@@ -66,4 +66,16 @@ module Paperclip
       end
     end
   end
+
+  class FakeProcessor < Processor
+
+    def make
+      raise self.class.raise_error if self.class.raise_error
+      self.class.return_nil ? nil : @file
+    end
+
+    class << self
+      attr_accessor :return_nil, :raise_error
+    end
+  end
 end
