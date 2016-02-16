@@ -7,33 +7,37 @@ module Paperclip
         e.message << " (You may need to install the aws-sdk gem)"
         raise e
       end unless defined?(AWS::Core)
-      @@s3_instances = Hash.new
       @@s3_instances_v2 = Hash.new
-      @@s3_lock      = Mutex.new
 
       def self.extended(base)
         base.extend Paperclip::Storage::S3
+        base.extend OverloadedMethods
       end
 
-      # @return [Hash]
-      def s3_instances
-        @@s3_instances
+      module OverloadedMethods
+        @@s3_instances = Hash.new
+        @@s3_lock      = Mutex.new
+
+        # @return [Hash]
+        def s3_instances
+          @@s3_instances
+        end
+
+        # @return [Mutex]
+        def s3_lock
+          @@s3_lock
+        end
+
+        def obtain_s3_instance_for(options)
+          s3_lock.lock
+          result = s3_instances[options] ||= AWS::S3.new(options)
+          s3_lock.unlock
+          result
+        end
       end
 
       def s3_instances_v2
         @@s3_instances_v2
-      end
-
-      # @return [Mutex]
-      def s3_lock
-        @@s3_lock
-      end
-
-      def obtain_s3_instance_for(options)
-        s3_lock.lock
-        result = s3_instances[options] ||= AWS::S3.new(options)
-        s3_lock.unlock
-        result
       end
 
       def obtain_s3_v2_instance_for(options)
