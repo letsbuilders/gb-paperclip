@@ -229,10 +229,27 @@ describe Paperclip::Attachment do
         expect(@attachment.instance_variable_get :@processor_tracker).to include :other
       end
 
+      it 'should handle failed processing styles called few times' do
+        @attachment.processing(:fail_test)
+        @attachment.processing(:other)
+        (rand(4)+2).times { @attachment.failed_processing(:fail_test) }
+        expect(@attachment.instance_variable_get :@processor_tracker).not_to include :fail_test
+        expect(@attachment.instance_variable_get :@processor_tracker).to include :other
+      end
+
       it 'should handle finished style' do
         @attachment.processing(:processed)
         @attachment.processing(:other)
         @attachment.finished_processing :processed
+        expect(@attachment.instance_variable_get :@processor_tracker).not_to include :processed
+        expect(@attachment.instance_variable_get :@processed_styles).to include :processed
+        expect(@attachment.instance_variable_get :@processor_tracker).to include :other
+      end
+
+      it 'should handle finished style called few times' do
+        @attachment.processing(:processed)
+        @attachment.processing(:other)
+        (rand(4)+2).times { @attachment.finished_processing :processed }
         expect(@attachment.instance_variable_get :@processor_tracker).not_to include :processed
         expect(@attachment.instance_variable_get :@processed_styles).to include :processed
         expect(@attachment.instance_variable_get :@processor_tracker).to include :other
