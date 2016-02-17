@@ -87,7 +87,9 @@ module Paperclip
         end
         @attachment.with_save_lock do
           if @attachment.is_dirty?
-            @attachment.finished_processing @style
+            GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
+              @attachment.finished_processing @style
+            end
           else
             GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
               begin
