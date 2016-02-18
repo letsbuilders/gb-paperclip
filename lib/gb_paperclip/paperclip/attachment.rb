@@ -14,8 +14,8 @@ module Paperclip
 
       def save
         with_save_lock do
-          @status_lock.lock
           begin
+            @status_lock.lock
             @is_saving = true
             @attributes_lock.synchronize do
               @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
@@ -48,8 +48,7 @@ module Paperclip
             intermediate_files << file if file
             file
           end
-          @attributes_lock.lock
-          begin
+          with_lock do
             @queued_for_write[name] = processor_result
             if @queued_for_write[name].nil?
               @queued_for_write.delete name
@@ -59,8 +58,6 @@ module Paperclip
               unadapted_file.close if unadapted_file.respond_to?(:close)
             end
             @queued_for_write[name]
-          ensure
-            @attributes_lock.unlock
           end
         rescue Paperclip::Errors::NotIdentifiedByImageMagickError => e
           failed_processing style
@@ -87,8 +84,8 @@ module Paperclip
       end
 
       def is_new?
-        @status_lock.lock
         begin
+          @status_lock.lock
           @instance.new_record? && !@instance.persisted?
         ensure
           @status_lock.unlock
@@ -96,8 +93,8 @@ module Paperclip
       end
 
       def with_lock(&block)
-        @attributes_lock.lock
         begin
+          @attributes_lock.lock
           block.call
         ensure
           @attributes_lock.unlock
@@ -105,8 +102,8 @@ module Paperclip
       end
 
       def with_save_lock(&block)
-        @save_lock.lock
         begin
+          @save_lock.lock
           block.call
         ensure
           @save_lock.unlock
@@ -114,8 +111,8 @@ module Paperclip
       end
 
       def change_queued_for_write(&block)
-        @attributes_lock.lock
         begin
+          @attributes_lock.lock
           block.call(@queued_for_write)
         ensure
           @attributes_lock.unlock

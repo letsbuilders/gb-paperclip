@@ -205,7 +205,9 @@ describe Paperclip::Attachment do
           dummy.avatar = @file
         end
         GBDispatch.dispatch_async(:save) do
-          dummy.save!
+          Dummy.transaction do
+            dummy.save!
+          end
         end
         GBDispatch.dispatch_sync(:process) do
           sleep(0.1)
@@ -304,6 +306,30 @@ describe Paperclip::Attachment do
         expect { @attachment.post_process_style(:thumb, @style) }.to raise_error
         Paperclip::FakeProcessor.raise_error = nil
       end
+    end
+  end
+
+  context 'locks' do
+    it 'should handle deadlock for save lock' do
+      expect do
+        @attachment.with_save_lock do
+          @attachment.with_save_lock do
+            puts 'should not execute this'
+          end
+        end
+      end.to raise_error
+      expect(@attachment.instance_variable_get(:@save_lock).locked?).to eq false
+    end
+
+    it 'should handle deadlock for save lock' do
+      expect do
+        @attachment.with_lock do
+          @attachment.with_lock do
+            puts 'should not execute this'
+          end
+        end
+      end.to raise_error
+      expect(@attachment.instance_variable_get(:@attributes_lock).locked?).to eq false
     end
   end
 

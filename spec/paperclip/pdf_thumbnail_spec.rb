@@ -699,6 +699,19 @@ describe Paperclip::PdfThumbnail do
         expect(@attachment.saved[:test]).to be_truthy
       end
 
+      it 'should not make deadlock if is dirty' do
+        @dummy.save!
+        @attachment.processing :test
+        @attachment.instance_variable_set :@dirty, true
+        @thumb.make
+        sleep(0.5)
+        expect(@attachment.saved[:test]).to be_nil
+        @attachment.instance_variable_set :@is_saving, false
+        wait_for_make
+        wait_for_save
+        expect(@dummy.processed_styles).to include :test
+      end
+
       it 'should save files if attachment is not dirty' do
         @attachment.instance_variable_set :@dirty, false
         @thumb.make
