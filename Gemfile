@@ -8,7 +8,6 @@ gemspec
 
 
 gem 'paperclip'
-gem 'gb_dispatch'
 
 group :development do
   gem 'guard'

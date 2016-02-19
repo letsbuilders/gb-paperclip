@@ -4,7 +4,7 @@ describe Paperclip::Thumbnail do
 
   context 'Attachment processing info' do
     before(:each) do
-      @file       = File.new(fixture_file('7m.mov'), 'rb')
+      @file       = File.new(fixture_file('5k.png'), 'rb')
       @attachment = stub
       @thumb      = Paperclip::Thumbnail.new(@file, { geometry: '100x100', style: :test }, @attachment)
     end

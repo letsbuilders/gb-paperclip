@@ -8,6 +8,7 @@ require 'mocha/api'
 require 'bourne'
 require 'ostruct'
 require 'simplecov'
+require 'gb_dispatch'
 
 SimpleCov.start do
   add_filter '/spec/'
@@ -32,6 +33,7 @@ FIXTURES_DIR              = File.join(File.dirname(__FILE__), "fixtures")
 config                    = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
 ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
 ActiveRecord::Base.establish_connection(config['test'])
+GBDispatch.logger = Logger.new(STDOUT)
 Paperclip.options[:logger] = ActiveRecord::Base.logger
 
 Dir[File.join(ROOT, 'spec', 'support', '**', '*.rb')].each { |f| require f }
