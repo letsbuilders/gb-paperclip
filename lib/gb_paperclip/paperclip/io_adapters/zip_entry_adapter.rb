@@ -5,7 +5,7 @@ module Paperclip
     # @param target [Zip::Entry]
     def initialize(target)
       @target                = target
-      self.original_filename = @target.name.force_encoding("UTF-8").split('/').pop
+      self.original_filename = @target.name.force_encoding("UTF-8").encode('UTF-16be', :invalid => :replace, :replace => '_').encode('UTF-8').split('/').pop
       @tempfile              = copy_to_tempfile(@target)
       @size                  = @target.size
       @content_type          = ContentTypeDetector.new(@tempfile.path).detect
