@@ -22,7 +22,7 @@ module Paperclip
             end
             result = super
           ensure
-            @status_lock.unlock
+            @status_lock.unlock if @status_lock.owned?
           end
           @status_lock.synchronize { @is_saving = false }
           result
@@ -88,7 +88,7 @@ module Paperclip
           @status_lock.lock
           @instance.new_record? && !@instance.persisted?
         ensure
-          @status_lock.unlock
+          @status_lock.unlock if @status_lock.owned?
         end
       end
 
@@ -97,7 +97,7 @@ module Paperclip
           @attributes_lock.lock
           block.call
         ensure
-          @attributes_lock.unlock
+          @attributes_lock.unlock if @attributes_lock.owned?
         end
       end
 
@@ -106,7 +106,7 @@ module Paperclip
           @save_lock.lock
           block.call
         ensure
-          @save_lock.unlock
+          @save_lock.unlock if @save_lock.owned?
         end
       end
 
@@ -115,7 +115,7 @@ module Paperclip
           @attributes_lock.lock
           block.call(@queued_for_write)
         ensure
-          @attributes_lock.unlock
+          @attributes_lock.unlock if @attributes_lock.owned?
         end
       end
     end
@@ -141,7 +141,7 @@ module Paperclip
         end
         @processor_tracker << style
       ensure
-        @processor_info_lock.unlock
+        @processor_info_lock.unlock if @processor_info_lock.owned?
       end
       @processor_tracker
     end
@@ -225,7 +225,7 @@ module Paperclip
             end
           end
         ensure
-          @processor_info_lock.unlock
+          @processor_info_lock.unlock if @processor_info_lock.owned?
         end
       end
     end
