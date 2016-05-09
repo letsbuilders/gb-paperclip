@@ -9,6 +9,7 @@ require 'bourne'
 require 'ostruct'
 require 'simplecov'
 require 'gb_dispatch'
+require 'aws-sdk'
 
 SimpleCov.start do
   add_filter '/spec/'
@@ -57,4 +58,9 @@ RSpec.configure do |config|
   config.after(:all) do
     FileUtils.rm_r Pathname.new(ROOT).join('tmp')
   end
+
+  Aws.config.update({
+                        region: 'us-west-2',
+                        credentials: Aws::Credentials.new('akid', 'secret')
+                    })
 end
