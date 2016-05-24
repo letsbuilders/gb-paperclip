@@ -22,6 +22,7 @@ describe Paperclip::Attachment do
           async_flag = true
         end
       end
+      sleep(0.05)
       GBDispatch.dispatch_sync :save do
         @attachment.save
       end
@@ -38,6 +39,7 @@ describe Paperclip::Attachment do
         async_flag = true
         @attachment.send(:status_lock).unlock
       end
+      sleep(0.05)
       GBDispatch.dispatch_sync :save do
         sleep(0.05)
         @attachment.save
