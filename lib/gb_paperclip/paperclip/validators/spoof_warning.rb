@@ -10,6 +10,7 @@ module Paperclip
           record.send "#{attribute}_spoof_warning=", true
           record.send "#{attribute}_spoof_content_type=", detector.spoofed_content_type
         end
+        adapter.close
       end
 
       def self.helper_method_name
