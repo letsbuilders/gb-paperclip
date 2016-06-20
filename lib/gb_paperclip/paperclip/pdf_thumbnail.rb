@@ -2,6 +2,7 @@ require 'paperclip/thumbnail'
 require 'gb_paperclip/paperclip/thumbnail'
 require 'gb_paperclip/paperclip/attachment'
 require 'gb_paperclip/paperclip/fake_geometry'
+require 'gb_paperclip/paperclip/geometry_parser'
 require 'gb_dispatch'
 
 module Paperclip
