@@ -41,6 +41,10 @@ module Paperclip
         end
       end
 
+      def force_close!
+        unlink_files([@file])
+      end
+
       def unlink_files(files)
         super files.compact
       end
