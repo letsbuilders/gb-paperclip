@@ -9,10 +9,6 @@ gemspec
 
 gem 'paperclip'
 
-group :development do
-  gem 'guard'
-end
-
 group :test do
   gem 'activerecord', :require => 'active_record'
   gem 'sqlite3'

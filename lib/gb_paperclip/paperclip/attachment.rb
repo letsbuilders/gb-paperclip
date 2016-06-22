@@ -13,24 +13,32 @@ module Paperclip
       end
 
       def save
-        with_save_lock do
-          begin
-            @status_lock.lock
-            @is_saving = true
-            @attributes_lock.synchronize do
-              @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
-            end
-            result = super
-          ensure
-            @status_lock.unlock if @status_lock.owned?
+        result = nil
+        with_status_lock do
+          with_lock do
+            @queued_for_write = @queued_for_write.delete_if { |key, value| key != :original &&(value.nil? || value.kind_of?(Paperclip::NilAdapter)) }
           end
-          @status_lock.synchronize { @is_saving = false }
-          result
+          result = super
         end
+        result
       end
 
       def is_saving?
-        status_lock.synchronize { !!@is_saving }
+        with_status_lock do
+          !!@is_saving
+        end
+      end
+
+      def is_saving!
+        with_status_lock do
+          @is_saving = true
+        end
+      end
+
+      def is_saved!
+        with_status_lock do
+          @is_saving = false
+        end
       end
 
       def unlink_files(files)
@@ -72,23 +80,26 @@ module Paperclip
       end
 
       def queued_for_write
-        @attributes_lock.synchronize { @queued_for_write }
+        with_lock do
+          @queued_for_write
+        end
       end
 
       def staged?
-        @attributes_lock.synchronize { super }
+        with_lock do
+          super
+        end
       end
 
       def dirty?
-        @status_lock.synchronize { super }
+        with_status_lock do
+          super
+        end
       end
 
       def is_new?
-        begin
-          @status_lock.lock
-          @instance.new_record? && !@instance.persisted?
-        ensure
-          @status_lock.unlock if @status_lock.owned?
+        with_status_lock do
+          !@instance.persisted? && @instance.new_record?
         end
       end
 
@@ -108,6 +119,13 @@ module Paperclip
         ensure
           @save_lock.unlock if @save_lock.owned?
         end
+      end
+
+      def with_status_lock(&block)
+        @status_lock.lock unless @status_lock.owned?
+        block.call
+      ensure
+        @status_lock.unlock if @status_lock.owned?
       end
 
       def change_queued_for_write(&block)
@@ -171,7 +189,9 @@ module Paperclip
     end
 
     def is_dirty?
-      status_lock.synchronize { @dirty }
+      with_status_lock do
+        !!@dirty
+      end
     end
 
     # :nodoc:
@@ -214,11 +234,12 @@ module Paperclip
               instance.processing       = false
               instance.processed_styles = @processed_styles
             else
-              instance.run_paperclip_callbacks(:async_post_process) do
-                ensure_is_created do
+              ensure_is_created do
+                instance.run_paperclip_callbacks(:async_post_process) do
                   instance.with_lock do
                     instance.update_column :processing, false
                     instance.update_column :processed_styles, @processed_styles
+                    instance.reload
                   end
                 end
               end
@@ -231,8 +252,12 @@ module Paperclip
     end
 
     def ensure_is_created(timeout=5.0, &block)
+      while is_saving?
+        sleep 0.001
+      end
       retries = 0
       begin
+        raise ActiveRecord::RecordNotFound unless instance.persisted?
         @instance.class.transaction do
           block.call
         end
