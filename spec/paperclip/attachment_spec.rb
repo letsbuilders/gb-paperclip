@@ -375,6 +375,19 @@ describe Paperclip::Attachment do
       end.not_to raise_error
       expect(status).to be_truthy
     end
+
+    it 'should set is saving correctly without transaction' do
+      @dummy.save
+      expect(@attachment.is_saving?).to be_falsey
+    end
+
+    it 'should set is saving correctly within transaction' do
+      Dummy.transaction do
+        @dummy.save
+        expect(@attachment.is_saving?).to be_truthy
+      end
+      expect(@attachment.is_saving?).to be_falsey
+    end
   end
 
   def wait_for(queue)
