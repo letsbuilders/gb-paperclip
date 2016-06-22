@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gb_paperclip (0.3.18)
+    gb_paperclip (0.4.0)
       gb_dispatch (>= 0.0.6)
       paperclip (>= 4.2.0)
 

@@ -15,5 +15,12 @@ describe Paperclip::Thumbnail do
       @attachment.expects(:finished_processing).with(:test)
       @thumb.make
     end
+
+    it 'should call failed processing style if not whiny and not not successful' do
+      @thumb.instance_variable_set :@whiny, false
+      @attachment.expects(:failed_processing).with(:test)
+      @thumb.stubs(:convert).with(anything, anything).raises(Cocaine::ExitStatusError.new '')
+      expect { @thumb.make }.not_to raise_error
+    end
   end
 end
