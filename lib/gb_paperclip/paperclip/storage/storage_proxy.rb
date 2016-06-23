@@ -37,6 +37,10 @@ module Paperclip
         false
       end
 
+      def close_all_files!
+        unlink_files @queued_for_write.values
+      end
+
       def unlink_files(files)
         Array(files).each do |file|
           file.close unless file.closed?
