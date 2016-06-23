@@ -136,12 +136,12 @@ module Paperclip
 
       # noinspection RubyUnusedLocalVariable
       def copy_to_local_file(style, local_dest_path) #:nodoc:
-        raise ArgumentError.neśw('Model need to have :glacier_id string field!') unless instance.respond_to? :glacier_ids
+        raise ArgumentError.new('Model need to have :glacier_id string field!') unless instance.respond_to? :glacier_ids
         raise Exception.new 'Write only storage! you can retrieve file asynchronously!'
       end
     end
 
-    # Asynchronously copy file to local path and call success śblock. Success block can have one param - it is an exception.
+    # Asynchronously copy file to local path and call success block. Success block can have one param - it is an exception.
     # When everything succeeded, param will be an +false+ value, other else it will exception object.
     # Success block will be usually called after 3-6 hours.
     # @example example usage

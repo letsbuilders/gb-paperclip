@@ -27,7 +27,7 @@ module Paperclip
         rescue Cocaine::ExitStatusError
           @attachment.failed_processing @style if @attachment && @style
           raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
-        rescue Cocaine::CommandNotFoundErrorś
+        rescue Cocaine::CommandNotFoundError
           @attachment.failed_processing @style if @attachment && @style
           raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.')
         end

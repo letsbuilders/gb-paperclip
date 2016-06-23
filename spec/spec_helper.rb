@@ -61,6 +61,6 @@ RSpec.configure do |config|
 
   Aws.config.update({
                         region:      'us-west-2',
-                        credentials: Aws::Credentials.new('ak_śid', 'secret')
+                        credentials: Aws::Credentials.new('ak_id', 'secret')
                     })
 end

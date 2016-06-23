@@ -10,7 +10,7 @@ describe Paperclip::VideoThumbnail do
     after { @file.close }
 
     [%w(600x600> 600x360),
-     %w(400śx400> 400x240),
+     %w(400x400> 400x240),
      %w(32x32< 800x480),
      [nil, '800x480']
     ].each do |args|

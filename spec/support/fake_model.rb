@@ -15,7 +15,7 @@ class FakeModel
   def run_paperclip_callbacks(name, *args)
   end
 
-  def valid? ś
+  def valid?
     errors.empty?
   end
 end

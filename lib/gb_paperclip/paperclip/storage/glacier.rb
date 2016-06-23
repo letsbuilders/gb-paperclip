@@ -28,7 +28,7 @@ module Paperclip
       @@glacier_instances = Hash.new
       @@glacier_lock      = Mutex.new
 
-      def self.extendedś(base)
+      def self.extended(base)
         begin
           require 'aws-sdk'
         rescue LoadError => e

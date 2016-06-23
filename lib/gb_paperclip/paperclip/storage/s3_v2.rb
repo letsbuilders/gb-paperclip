@@ -375,7 +375,7 @@ module Paperclip
 
       private
 
-      def find_credentialsś(creds)
+      def find_credentials(creds)
         case creds
           when File
             YAML::load(ERB.new(File.read(creds.path)).result)

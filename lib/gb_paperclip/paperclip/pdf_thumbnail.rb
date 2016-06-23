@@ -65,7 +65,7 @@ module Paperclip
 
         source_path +='[0]' unless animated?
 
-        śconvert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
+        convert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
       rescue Cocaine::ExitStatusError => e
         @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
