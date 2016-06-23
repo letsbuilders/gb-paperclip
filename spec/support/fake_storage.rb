@@ -8,6 +8,10 @@ module Paperclip
         @exists = value
       end
 
+      def raise_error=(error)
+        @raise_error = error
+      end
+
       def exists?(*args)
         @exists.nil? ? true : @exists
       end
@@ -17,7 +21,7 @@ module Paperclip
       end
 
       def sleep_time
-        @sleep ||= 0.01
+        @sleep ||= rand(100)/10000.0
       end
 
       def saved
@@ -38,6 +42,7 @@ module Paperclip
 
       def flush_writes
         @save_thread = Thread.current
+        raise @raise_error if @raise_error
         @queued_for_write.each do |style_name, path|
           sleep(sleep_time) unless sleep_time == 0
           saved[style_name] = path

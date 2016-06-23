@@ -210,6 +210,38 @@ describe Paperclip::Storage::MultipleStorage do
             expect(store.queued_for_write.keys).to eq [:original]
           end
         end
+
+        it 'should close all files' do
+          before_open_files_count = open_file_count
+          @avatar.flush_writes
+          sleep(0.1)
+          expect(open_file_count).to be <= before_open_files_count
+        end
+
+        it 'should close all files if saving fails (sync failure)' do
+          @avatar.backup_stores.each { |store| store.raise_error = TestException }
+          before_open_files_count = open_file_count
+          expect { @avatar.flush_writes }.to raise_error TestException
+          sleep(0.1)
+          expect(open_file_count).to be <= before_open_files_count
+        end
+
+        it 'should close all files if saving fails (async backup failure)' do
+          @avatar.instance_variable_set :@backup_sync, false
+          @avatar.backup_stores.each { |store| store.raise_error = TestException }
+          before_open_files_count = open_file_count
+          expect { @avatar.flush_writes }.to raise_error TestException
+          sleep(0.3)
+          expect(open_file_count).to be <= before_open_files_count
+        end
+
+        it 'should close all files if saving fails (async failure)' do
+          @avatar.additional_stores.each { |store| store.raise_error = TestException }
+          before_open_files_count = open_file_count
+          expect { @avatar.flush_writes }.not_to raise_error
+          sleep(0.3)
+          expect(open_file_count).to be <= before_open_files_count
+        end
       end
     end
 
