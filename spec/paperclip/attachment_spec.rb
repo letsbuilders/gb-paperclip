@@ -107,7 +107,7 @@ describe Paperclip::Attachment do
               after_save :take_nap
 
               def take_nap
-                sleep(rand())
+                sleep(rand)
               end
             end
           end
@@ -203,7 +203,7 @@ describe Paperclip::Attachment do
               after_save :take_nap
 
               def take_nap
-                sleep(rand())
+                sleep(rand)
               end
             end
           end

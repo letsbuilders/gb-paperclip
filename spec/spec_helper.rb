@@ -30,10 +30,10 @@ $LOAD_PATH << File.join(ROOT, 'lib')
 $LOAD_PATH << File.join(ROOT, 'lib', 'gb_paperclip')
 require File.join(ROOT, 'lib', 'gb_paperclip.rb')
 
-FIXTURES_DIR              = File.join(File.dirname(__FILE__), "fixtures")
-config                    = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
-ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + "/debug.log")
-ActiveRecord::Base.establish_connection(config['test'])
+FIXTURES_DIR              = File.join(File.dirname(__FILE__), 'fixtures')
+db_config                 = YAML::load(IO.read(File.dirname(__FILE__) + '/database.yml'))
+ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + '/debug.log')
+ActiveRecord::Base.establish_connection(db_config['test'])
 GBDispatch.logger = Logger.new(STDOUT)
 Paperclip.options[:logger] = ActiveRecord::Base.logger
 
@@ -60,7 +60,7 @@ RSpec.configure do |config|
   end
 
   Aws.config.update({
-                        region: 'us-west-2',
-                        credentials: Aws::Credentials.new('akid', 'secret')
+                        region:      'us-west-2',
+                        credentials: Aws::Credentials.new('ak_śid', 'secret')
                     })
 end

@@ -15,7 +15,7 @@ module Paperclip
         begin
           require 'aws-sdk'
         rescue LoadError => e
-          e.message << " (You may need to install the aws-sdk gem)"
+          e.message << ' (You may need to install the aws-sdk gem)'
           raise e
         end unless defined?(Aws::S3::Client)
 
@@ -42,9 +42,9 @@ module Paperclip
             @s3_server_side_encryption = @options[:s3_server_side_encryption]
           end
 
-          unless @options[:url].to_s.match(/\A:s3.*url\Z/) || @options[:url] == ":asset_host"
+          unless @options[:url].to_s.match(/\A:s3.*url\Z/) || @options[:url] == ':asset_host'
             @options[:path] = path_option.gsub(/:url/, @options[:url]).gsub(/\A:rails_root\/public\/system/, '')
-            @options[:url]  = ":s3_path_url"
+            @options[:url]  = ':s3_path_url'
           end
           @options[:url] = @options[:url].inspect if @options[:url].is_a?(Symbol)
 
@@ -52,16 +52,16 @@ module Paperclip
         end
 
         Paperclip.interpolates(:s3_alias_url) do |attachment, style|
-          "#{attachment.s3_protocol(style, true)}//#{attachment.s3_host_alias}/#{attachment.path(style).gsub(%r{\A/}, "")}"
+          "#{attachment.s3_protocol(style, true)}//#{attachment.s3_host_alias}/#{attachment.path(style).gsub(%r{\A/}, '')}"
         end unless Paperclip::Interpolations.respond_to? :s3_alias_url
         Paperclip.interpolates(:s3_path_url) do |attachment, style|
-          "#{attachment.s3_protocol(style, true)}//#{attachment.s3_host_name}/#{attachment.bucket_name}/#{attachment.path(style).gsub(%r{\A/}, "")}"
+          "#{attachment.s3_protocol(style, true)}//#{attachment.s3_host_name}/#{attachment.bucket_name}/#{attachment.path(style).gsub(%r{\A/}, '')}"
         end unless Paperclip::Interpolations.respond_to? :s3_path_url
         Paperclip.interpolates(:s3_domain_url) do |attachment, style|
-          "#{attachment.s3_protocol(style, true)}//#{attachment.bucket_name}.#{attachment.s3_host_name}/#{attachment.path(style).gsub(%r{\A/}, "")}"
+          "#{attachment.s3_protocol(style, true)}//#{attachment.bucket_name}.#{attachment.s3_host_name}/#{attachment.path(style).gsub(%r{\A/}, '')}"
         end unless Paperclip::Interpolations.respond_to? :s3_domain_url
         Paperclip.interpolates(:asset_host) do |attachment, style|
-          "#{attachment.path(style).gsub(%r{\A/}, "")}"
+          "#{attachment.path(style).gsub(%r{\A/}, '')}"
         end unless Paperclip::Interpolations.respond_to? :asset_host
       end
 
@@ -176,7 +176,7 @@ module Paperclip
         host_name = @options[:s3_host_name]
         host_name = host_name.call(self) if host_name.is_a?(Proc)
 
-        host_name || s3_credentials[:s3_host_name] || "s3.amazonaws.com"
+        host_name || s3_credentials[:s3_host_name] || 's3.amazonaws.com'
       end
 
       def s3_host_alias
@@ -194,7 +194,7 @@ module Paperclip
       def bucket_name
         @bucket = @options[:bucket] || s3_credentials[:bucket]
         @bucket = @bucket.call(self) if @bucket.respond_to?(:call)
-        @bucket or raise ArgumentError, "missing required :bucket option"
+        @bucket or raise ArgumentError, 'missing required :bucket option'
       end
 
       def s3_bucket
@@ -250,7 +250,7 @@ module Paperclip
         else
           false
         end
-      rescue Aws::S3::Errors::ServiceError => e
+      rescue Aws::S3::Errors::ServiceError
         false
       end
 
@@ -351,9 +351,9 @@ module Paperclip
                 :bucket => bucket_name,
                 :key    => path.sub(%r{\A/}, '')
             )
-          rescue Aws::S3::Errors::NoSuchKey => e
+          rescue Aws::S3::Errors::NoSuchKey
             # Ignore this.
-          rescue Aws::S3::Errors::NoSuchBucket => e
+          rescue Aws::S3::Errors::NoSuchBucket
             # Ignore this.
           end
         end
@@ -375,7 +375,7 @@ module Paperclip
 
       private
 
-      def find_credentials creds
+      def find_credentialsś(creds)
         case creds
           when File
             YAML::load(ERB.new(File.read(creds.path)).result)
@@ -386,23 +386,23 @@ module Paperclip
           when NilClass
             {}
           else
-            raise ArgumentError, "Credentials given are not a path, file, proc, or hash."
+            raise ArgumentError, 'Credentials given are not a path, file, proc, or hash.'
         end
       end
 
       def use_secure_protocol?(style_name)
-        s3_protocol(style_name) == "https"
+        s3_protocol(style_name) == 'https'
       end
 
       def merge_s3_headers(http_headers, s3_headers, s3_metadata)
         return if http_headers.nil?
         http_headers = http_headers.call(instance) if http_headers.respond_to?(:call)
-        http_headers.inject({}) do |headers, (name, value)|
+        http_headers.inject({}) do |_, (name, value)|
           case name.to_s
             when /\Ax-amz-meta-(.*)/i
               s3_metadata[$1.downcase] = value
             else
-              s3_headers[name.to_s.downcase.sub(/\Ax-amz-/, '').tr("-", "_").to_sym] = value
+              s3_headers[name.to_s.downcase.sub(/\Ax-amz-/, '').tr('-', '_').to_sym] = value
           end
         end
       end

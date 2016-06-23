@@ -12,10 +12,10 @@ class FakeModel
     @errors ||= []
   end
 
-  def run_paperclip_callbacks name, *args
+  def run_paperclip_callbacks(name, *args)
   end
 
-  def valid?
+  def valid? ś
     errors.empty?
   end
 end

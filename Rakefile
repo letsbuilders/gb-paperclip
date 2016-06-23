@@ -4,6 +4,7 @@ begin
 
   task :default => :spec
 rescue LoadError
+  nil
 end
 
 task :build => :spec do

@@ -318,7 +318,6 @@ describe Paperclip::Storage::S3Improved do
         def counter
           @counter ||= 0
           @counter += 1
-          @counter
         end
       end
 
@@ -442,7 +441,6 @@ describe Paperclip::Storage::S3Improved do
         def counter
           @counter ||= 0
           @counter += 1
-          @counter
         end
       end
       @dummy        = Dummy.new
@@ -1417,7 +1415,7 @@ describe Paperclip::Storage::S3Improved do
           end
 
           it 'succeeds' do
-            assert @dummy.avatar.url().include? 'https://'
+            assert @dummy.avatar.url.include? 'https://'
             assert @dummy.avatar.url(:thumb).include? 'http://'
           end
         end

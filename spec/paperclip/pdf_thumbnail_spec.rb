@@ -10,9 +10,9 @@ describe Paperclip::PdfThumbnail do
 
       after { @file.close }
 
-      [['600x600>', '464x600'],
-       ['400x400>', '309x400'],
-       ['32x32<', '612x792'],
+      [%w(600x600> 464x600),
+       %w(400x400> 309x400),
+       %w(32x32< 612x792),
        [nil, '612x792']
       ].each do |args|
         context "being thumbnailed with a geometry of #{args[0]}" do
@@ -241,7 +241,7 @@ describe Paperclip::PdfThumbnail do
             end
 
             def transformation_to(target, should_crop)
-              ['SCALE', 'CROP']
+              %w(SCALE CROP)
             end
           end
 
@@ -299,9 +299,9 @@ describe Paperclip::PdfThumbnail do
 
       after { @file.close }
 
-      [['600x600>', '464x600'],
-       ['400x400>', '309x400'],
-       ['32x32<', '612x792'],
+      [%w(600x600> 464x600),
+       %w(400x400> 309x400),
+       %w(32x32< 612x792),
        [nil, '612x792']
       ].each do |args|
         context "being thumbnailed with a geometry of #{args[0]}" do
@@ -545,7 +545,7 @@ describe Paperclip::PdfThumbnail do
             end
 
             def transformation_to(target, should_crop)
-              ['SCALE', 'CROP']
+              %w(SCALE CROP)
             end
           end
 

@@ -1,7 +1,8 @@
 module Paperclip
   module Storage
+    # noinspection RubyTooManyInstanceVariablesInspection
     module Fake
-      def self.extended base
+      def self.extended(base)
       end
 
       def exists=(value)

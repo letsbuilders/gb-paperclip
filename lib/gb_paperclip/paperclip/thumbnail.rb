@@ -15,21 +15,21 @@ module Paperclip
         begin
           parameters = []
           parameters << source_file_options
-          parameters << ":source"
+          parameters << ':source'
           parameters << transformation_command
           parameters << convert_options
-          parameters << ":dest"
+          parameters << ':dest'
 
-          parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
+          parameters = parameters.flatten.compact.join(' ').strip.squeeze(' ')
 
-          success = convert(parameters, :source => "#{File.expand_path(src.path)}#{'[0]' unless animated?}", :dest => File.expand_path(dst.path))
+          convert(parameters, :source => "#{File.expand_path(src.path)}#{'[0]' unless animated?}", :dest => File.expand_path(dst.path))
           @attachment.finished_processing @style if @attachment && @style
-        rescue Cocaine::ExitStatusError => e
+        rescue Cocaine::ExitStatusError
           @attachment.failed_processing @style if @attachment && @style
           raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
-        rescue Cocaine::CommandNotFoundError => e
+        rescue Cocaine::CommandNotFoundErrorś
           @attachment.failed_processing @style if @attachment && @style
-          raise Paperclip::Errors::CommandNotFoundError.new("Could not run the `convert` command. Please install ImageMagick.")
+          raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.')
         end
         dst
       end

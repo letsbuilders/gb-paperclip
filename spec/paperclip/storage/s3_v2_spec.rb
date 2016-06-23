@@ -328,7 +328,6 @@ describe Paperclip::Storage::S3V2 do
         def counter
           @counter ||= 0
           @counter += 1
-          @counter
         end
       end
 
@@ -457,7 +456,6 @@ describe Paperclip::Storage::S3V2 do
         def counter
           @counter ||= 0
           @counter += 1
-          @counter
         end
       end
       @dummy        = Dummy.new
@@ -1477,7 +1475,7 @@ describe Paperclip::Storage::S3V2 do
                                               acl:          'public-read',
             )
             @dummy.save
-            assert @dummy.avatar.url().include? 'https://'
+            assert @dummy.avatar.url.include? 'https://'
             assert @dummy.avatar.url(:thumb).include? 'https://'
           end
         end

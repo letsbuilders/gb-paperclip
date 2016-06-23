@@ -1,7 +1,7 @@
 module Paperclip
   module Storage
     module MultipleStorage
-      def self.extended base
+      def self.extended(base)
         base.instance_eval do
 
           main_store_options           = Hash.new.merge @options

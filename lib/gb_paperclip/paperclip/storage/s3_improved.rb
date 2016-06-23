@@ -4,7 +4,7 @@ module Paperclip
       begin
         require 'aws-sdk-v1'
       rescue LoadError => e
-        e.message << " (You may need to install the aws-sdk gem)"
+        e.message << ' (You may need to install the aws-sdk gem)'
         raise e
       end unless defined?(AWS::Core)
       @@s3_instances_v2 = Hash.new

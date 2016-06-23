@@ -13,7 +13,7 @@ class MockAttachment
   end
 
   def respond_to?(meth)
-    if meth.to_s == "updated_at"
+    if meth.to_s == 'updated_at'
       @responds_to_updated_at || @updated_at
     else
       super

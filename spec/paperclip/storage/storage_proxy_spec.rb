@@ -3,7 +3,7 @@ require 'gb_paperclip/paperclip/storage/storage_proxy'
 
 describe Paperclip::Storage::StorageProxy do
   before do
-    rebuild_model styles: { thumbnail: "25x25#" }
+    rebuild_model styles: { thumbnail: '25x25#' }
     @dummy = Dummy.new
 
     @file         = File.open(fixture_file('5k.png'))

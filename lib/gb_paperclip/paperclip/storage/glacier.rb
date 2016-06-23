@@ -2,7 +2,7 @@ module Paperclip
   module Storage
     # Amazon Glacier is a part of AWS cloud. In contrast to Amazon S3 storage
     # is design to cheap storing files, but it provide very slow data access.
-    # Retrieving file can usually take between 3 and 6 hours. Beacuse of this, it is "write only" storage.
+    # Retrieving file can usually take between 3 and 6 hours. Because of this, it is "write only" storage.
     # This storage is design to be used as an backup - it should be used only together with #{Paperclip::Storage::MultipleStorage},
     # but never as main store.
     #
@@ -28,11 +28,11 @@ module Paperclip
       @@glacier_instances = Hash.new
       @@glacier_lock      = Mutex.new
 
-      def self.extended base
+      def self.extendedś(base)
         begin
           require 'aws-sdk'
         rescue LoadError => e
-          e.message << " (You may need to install the aws-sdk gem)"
+          e.message << ' (You may need to install the aws-sdk gem)'
           raise e
         end unless defined?(Aws::Glacier::Client)
 
@@ -42,7 +42,7 @@ module Paperclip
         end
       end
 
-      def parse_credentials creds
+      def parse_credentials(creds)
         creds = creds.respond_to?('call') ? creds.call(self) : creds
         creds = find_credentials(creds).stringify_keys
         env   = Object.const_defined?(:Rails) ? Rails.env : nil
@@ -158,7 +158,7 @@ module Paperclip
           when NilClass
             {}
           else
-            raise ArgumentError, "Credentials given are not a path, file, proc, or hash."
+            raise ArgumentError, 'Credentials given are not a path, file, proc, or hash.'
         end
       end
 
@@ -218,7 +218,7 @@ module Paperclip
 
       def flush_deletes #:nodoc:
         raise ArgumentError.new('Model need to have :glacier_ids string field!') unless instance.respond_to? :glacier_ids
-        for path in @queued_for_delete do
+        @queued_for_delete.each do |path|
           next unless glacier_ids && glacier_ids[path]
           log("deleting from glacier #{path}")
           glacier_vault.archive(glacier_ids[path]).delete
@@ -233,6 +233,7 @@ module Paperclip
         @queued_for_delete = []
       end
 
+      # noinspection RubyUnusedLocalVariable
       def copy_to_local_file(style, local_dest_path) #:nodoc:
         raise ArgumentError.new('Model need to have :glacier_id string field!') unless instance.respond_to? :glacier_ids
         raise Exception.new 'Write only storage! you can retrieve file asynchronously!'
