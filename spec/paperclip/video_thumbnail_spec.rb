@@ -9,9 +9,9 @@ describe Paperclip::VideoThumbnail do
 
     after { @file.close }
 
-    [['600x600>', '600x360'],
-     ['400x400>', '400x240'],
-     ['32x32<', '800x480'],
+    [%w(600x600> 600x360),
+     %w(400x400> 400x240),
+     %w(32x32< 800x480),
      [nil, '800x480']
     ].each do |args|
       context "being thumbnailed with a geometry of #{args[0]}" do
@@ -229,7 +229,7 @@ describe Paperclip::VideoThumbnail do
           end
 
           def transformation_to(target, should_crop)
-            ['SCALE', 'CROP']
+            %w(SCALE CROP)
           end
         end
 

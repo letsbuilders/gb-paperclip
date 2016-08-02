@@ -93,9 +93,9 @@ describe Paperclip::CopyAdapter do
 
     context 'with attachment adapter' do
       before do
-        rebuild_model path: "tmp/:class/:attachment/:style/:filename", styles: { thumb: '50x50' }
+        rebuild_model path: 'tmp/:class/:attachment/:style/:filename', styles: { thumb: '50x50' }
         @attachment = Dummy.new.avatar
-        @file       = File.new(fixture_file("5k.png"))
+        @file       = File.new(fixture_file('5k.png'))
         @file.binmode
 
         @attachment.assign(@file)
@@ -251,10 +251,10 @@ describe Paperclip::CopyAdapter do
     end
     context 'with http url proxy adapter' do
       before do
-        @open_return = StringIO.new("xxx")
-        @open_return.stubs(:content_type).returns("image/png")
+        @open_return = StringIO.new('xxx')
+        @open_return.stubs(:content_type).returns('image/png')
         Paperclip::HttpUrlProxyAdapter.any_instance.stubs(:download_content).returns(@open_return)
-        @url              = "http://thoughtbot.com/images/thoughtbot-logo.png"
+        @url              = 'http://thoughtbot.com/images/thoughtbot-logo.png'
         @original_adapter = Paperclip.io_adapters.for(@url)
         @subject          = Paperclip::CopyAdapter.new(@original_adapter)
       end

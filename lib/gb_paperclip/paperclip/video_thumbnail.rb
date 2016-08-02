@@ -33,22 +33,22 @@ module Paperclip
         dst        = create_image
         parameters = []
         parameters << source_file_options
-        parameters << ":source"
+        parameters << ':source'
         parameters << transformation_command
         parameters << convert_options
-        parameters << ":dest"
-        parameters = parameters.flatten.compact.join(" ").strip.squeeze(" ")
+        parameters << ':dest'
+        parameters = parameters.flatten.compact.join(' ').strip.squeeze(' ')
         src        = dst
         dst        = Tempfile.new([@basename, ".#{@format}"])
         dst.binmode
         success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
         @attachment.finished_processing @style if @attachment && @style
         success
-      rescue Cocaine::ExitStatusError => e
+      rescue Cocaine::ExitStatusError
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
-      rescue Cocaine::CommandNotFoundError => e
+      rescue Cocaine::CommandNotFoundError
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.') if whiny
@@ -86,7 +86,7 @@ module Paperclip
       cmd << %Q["#{File.expand_path(dst.path)}"]
       begin
         Paperclip.run('avconv', cmd)
-      rescue Cocaine::CommandNotFoundError => e
+      rescue Cocaine::CommandNotFoundError
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `avconv` command. Please install libav')
       end
       @current_geometry = @file_geometry_parser.from_file(dst)
@@ -98,9 +98,9 @@ module Paperclip
     def transformation_command
       scale, crop = @current_geometry.transformation_to(@geometry, crop?)
       trans       = []
-      trans << "-auto-orient"
-      trans << "-resize" << %["#{scale}"] unless scale.nil? || scale.empty?
-      trans << "-crop" << %["#{crop}"] << "+repage" if crop
+      trans << '-auto-orient'
+      trans << '-resize' << %["#{scale}"] unless scale.nil? || scale.empty?
+      trans << '-crop' << %["#{crop}"] << '+repage' if crop
       trans
     end
 
@@ -112,7 +112,7 @@ module Paperclip
       begin
         cmd = %Q[-loglevel quiet -show_format_entry duration "#{File.expand_path(file.path)}" ]
         Paperclip.run('avprobe', cmd)
-      rescue Cocaine::CommandNotFoundError => e
+      rescue Cocaine::CommandNotFoundError
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `avprobe` command. Please install libav')
       end
     end

@@ -11,7 +11,7 @@ class MockUrlGeneratorBuilder
   def for(style_name, options)
     @generated_url_with_style_name = style_name
     @generated_url_with_options    = options
-    "hello"
+    'hello'
   end
 
   def has_generated_url_with_options?(options)

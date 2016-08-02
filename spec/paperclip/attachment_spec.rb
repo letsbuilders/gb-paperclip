@@ -1,6 +1,11 @@
 require 'spec_helper'
 require 'gb_paperclip/paperclip/attachment'
 
+unless defined? TestException
+  class TestException < Exception;
+  end
+end
+
 describe Paperclip::Attachment do
 
   before(:each) do
@@ -24,7 +29,7 @@ describe Paperclip::Attachment do
       end
       sleep(0.1)
       GBDispatch.dispatch_sync :save do
-        @attachment.save
+        @dummy.save
       end
       expect(async_flag).to eq true
       wait_for :test
@@ -102,7 +107,7 @@ describe Paperclip::Attachment do
               after_save :take_nap
 
               def take_nap
-                sleep(0.5)
+                sleep(rand)
               end
             end
           end
@@ -190,37 +195,44 @@ describe Paperclip::Attachment do
         expect(@dummy.processed_styles).to eq [:foo, :bar]
       end
 
-      it 'should save if saving on different thread' do
-        unless  defined? SleepyDummy
-          class SleepyDummy < Dummy
-            self.table_name = 'dummies'
-            after_save :take_nap
+      100.times do |counter|
+        it "should save if saving on different thread #{counter}" do
+          unless defined? SleepyDummy
+            class SleepyDummy < Dummy
+              self.table_name = 'dummies'
+              after_save :take_nap
 
-            def take_nap
-              sleep(0.5)
+              def take_nap
+                sleep(rand)
+              end
             end
           end
-        end
-        dummy = nil
-        GBDispatch.dispatch_sync(:save) do
-          dummy        = SleepyDummy.new
-          dummy.avatar = @file
-        end
-        GBDispatch.dispatch_async(:save) do
-          Dummy.transaction do
-            dummy.save!
+          dummy  = nil
+          status = nil
+          GBDispatch.dispatch_sync(:save) do
+            dummy        = SleepyDummy.new
+            dummy.avatar = @file
           end
+          GBDispatch.dispatch_async(:save) do
+            Dummy.transaction do
+              status = dummy.save!
+            end
+          end
+          GBDispatch.dispatch_sync(:process) do
+            sleep(0.1)
+            dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
+            expect { dummy.avatar.send :save_processing_info }.not_to raise_error
+          end
+          wait_for :save
+          expect(dummy.avatar.saved[:original]).not_to be_nil
+          expect(status).to be_truthy
+          if dummy.changes.keys.any?
+            puts dummy.changes
+          end
+          expect(dummy.changes.keys).to eq []
+          expect(dummy.reload.processing).to eq false
+          expect(dummy.processed_styles).to eq [:foo, :bar]
         end
-        GBDispatch.dispatch_sync(:process) do
-          sleep(0.1)
-          dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
-          expect { dummy.avatar.send :save_processing_info }.not_to raise_error
-        end
-        wait_for :save
-        expect(dummy.avatar.saved[:original]).not_to be_nil
-        expect(dummy.changes.keys.any?).to be_falsey
-        expect(dummy.reload.processing).to eq false
-        expect(dummy.processed_styles).to eq [:foo, :bar]
       end
     end
 
@@ -319,8 +331,26 @@ describe Paperclip::Attachment do
             puts 'should not execute this'
           end
         end
-      end.to raise_error
+      end.to raise_error ThreadError
       expect(@attachment.instance_variable_get(:@save_lock).locked?).to eq false
+    end
+
+    it 'should handle deadlock on exceptions - save lock' do
+      expect do
+        @attachment.with_save_lock do
+          raise TestException
+        end
+      end.to raise_error TestException
+      expect(@attachment.instance_variable_get(:@save_lock).locked?).to eq false
+    end
+
+    it 'should handle deadlock on exceptions' do
+      expect do
+        @attachment.with_lock do
+          raise TestException
+        end
+      end.to raise_error TestException
+      expect(@attachment.instance_variable_get(:@attributes_lock).locked?).to eq false
     end
 
     it 'should handle deadlock for save lock' do
@@ -330,8 +360,33 @@ describe Paperclip::Attachment do
             puts 'should not execute this'
           end
         end
-      end.to raise_error
+      end.to raise_error ThreadError
       expect(@attachment.instance_variable_get(:@attributes_lock).locked?).to eq false
+    end
+
+    it 'should not raise error on nested status lock' do
+      status = false
+      expect do
+        @attachment.with_status_lock do
+          @attachment.with_status_lock do
+            status = true
+          end
+        end
+      end.not_to raise_error
+      expect(status).to be_truthy
+    end
+
+    it 'should set is saving correctly without transaction' do
+      @dummy.save
+      expect(@attachment.is_saving?).to be_falsey
+    end
+
+    it 'should set is saving correctly within transaction' do
+      Dummy.transaction do
+        @dummy.save
+        expect(@attachment.is_saving?).to be_truthy
+      end
+      expect(@attachment.is_saving?).to be_falsey
     end
   end
 

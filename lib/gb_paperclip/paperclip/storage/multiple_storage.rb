@@ -1,7 +1,7 @@
 module Paperclip
   module Storage
     module MultipleStorage
-      def self.extended base
+      def self.extended(base)
         base.instance_eval do
 
           main_store_options           = Hash.new.merge @options
@@ -56,14 +56,22 @@ module Paperclip
             store.flush_writes
           else
             thr = on_new_thread do
-              store.flush_writes
+              begin
+                store.flush_writes
+              ensure
+                store.after_flush_writes
+              end
             end
             critical_threads << thr
           end
         end
         @additional_stores.each do |store|
           on_new_thread do
-            store.flush_writes
+            begin
+              store.flush_writes
+            ensure
+              store.after_flush_writes #close all copied files
+            end
           end
         end
         @main_store.flush_writes
@@ -74,6 +82,9 @@ module Paperclip
           sleep 0.1
         end
         @queued_for_write
+      rescue => e
+        close_all_queue_files
+        raise e
       end
 
       def flush_deletes #:nodoc:
@@ -136,6 +147,18 @@ module Paperclip
           end
           after_flush_writes
           @queued_for_write = {}
+        end
+      end
+
+      def close_all_queue_files
+        with_lock do
+          @backup_stores.each do |store|
+            store.close_all_files!
+          end
+          @main_store.close_all_files!
+          @additional_stores.each do |store|
+            store.close_all_files!
+          end
         end
       end
 
