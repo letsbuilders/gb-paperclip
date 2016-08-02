@@ -177,7 +177,7 @@ module Paperclip
           begin
             retries += 1
             archive = glacier_vault.upload_archive(body: file, archive_description: path(style).to_s)
-            instance.update_column(:glacier_ids, Hash.new.merge(glacier_ids).merge(path(style).sub(%r{\A/},'' => archive.id)))
+            instance.update_column(:glacier_ids, Hash.new.merge(glacier_ids).merge(path(style).sub(%r{\A/},'') => archive.id))
           rescue Aws::Glacier::Errors::ResourceNotFoundException
             create_vault
             retry
@@ -200,7 +200,7 @@ module Paperclip
           end
         end
 
-        after_flush_write
+        after_flush_writes
 
         @queued_for_write = {}
       end
