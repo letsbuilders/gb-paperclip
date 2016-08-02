@@ -34,7 +34,7 @@ module Paperclip
 
       # @return [IO]
       def get_file_stream(style_name = default_style)
-        s3_client.get_object(bucket: bucket_name, key: path(style_name).sub(%r{\A/}, '')).body
+        s3_client.get_object(bucket: bucket_name, key: style_name_as_path(style_name)).body
       end
 
       def s3_storage_class(style = default_style)
