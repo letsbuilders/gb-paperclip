@@ -81,11 +81,9 @@ module Paperclip
         time_offset   = Time.at(half_of_movie).utc.strftime('%H:%M:%S.%L')
       end
 
-      cmd = %Q[-itsoffset #{time_offset} -i "#{File.expand_path(file.path)}" -y -vcodec mjpeg -vframes 1 -an -f rawvideo ]
-      #cmd << "-s #{geometry.to_s} " unless geometry.nil?
-      cmd << %Q["#{File.expand_path(dst.path)}"]
+      cmd = '-loglevel quiet -itsoffset :offset -i :input_file -y -vcodec mjpeg -vframes 1 -an -f rawvideo :output_file'
       begin
-        Paperclip.run('avconv', cmd)
+        Paperclip.run('avconv', cmd, offset: time_offset, input_file: File.expand_path(file.path), output_file: File.expand_path(dst.path) )
       rescue Cocaine::CommandNotFoundError
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `avconv` command. Please install libav')
       end
