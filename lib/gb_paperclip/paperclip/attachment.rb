@@ -38,14 +38,14 @@ module Paperclip
       end
 
       def post_process_style(name, style) #:nodoc:
-        intermediate_files = []
-        processing style
         begin
+          processing style
           raise RuntimeError.new("Style #{name} has no processors defined.") if style.processors.blank?
+          intermediate_files = []
 
           processor_result = style.processors.inject(@queued_for_write[:original]) do |file, processor|
             file = Paperclip.processor(processor).make(file, style.processor_options, self)
-            intermediate_files << file if file
+            intermediate_files << file if file && file != queued_for_write[:original]
             file
           end
           with_lock do

@@ -25,8 +25,6 @@ module Paperclip
     #   be used as an description of archive.
     # * +glacier_region+ Amazon region.
     module Glacier
-      @@glacier_instances = Hash.new
-      @@glacier_lock      = Mutex.new
 
       def self.extended base
         begin
@@ -50,11 +48,7 @@ module Paperclip
       end
 
       def glacier_instances
-        @@glacier_instances
-      end
-
-      def glacier_lock
-        @@glacier_lock
+        Thread.current[:glacier_instances] ||= Hash.new
       end
 
       def glacier_credentials
@@ -111,10 +105,7 @@ module Paperclip
 
       # @return [Aws::Glacier::Client]
       def obtain_glacier_instance_for(options)
-        glacier_lock.lock
-        instance = (glacier_instances[options] ||= Aws::Glacier::Client.new(options))
-        glacier_lock.unlock
-        instance
+        glacier_instances[options] ||= Aws::Glacier::Client.new(options)
       end
 
       # @return [AWS::Glacier::Vault]
@@ -185,10 +176,8 @@ module Paperclip
           retries = 0
           begin
             retries += 1
-            new_file = file.clone
-            new_file.rewind
-            archive = glacier_vault.upload_archive(body: new_file, archive_description: path(style).to_s)
-            instance.update_column(:glacier_ids, (glacier_ids.clone).merge(path(style) => archive.id))
+            archive = glacier_vault.upload_archive(body: file, archive_description: path(style).to_s)
+            instance.update_column(:glacier_ids, Hash.new.merge(glacier_ids).merge(path(style).sub(%r{\A/},'' => archive.id)))
           rescue Aws::Glacier::Errors::ResourceNotFoundException
             create_vault
             retry
@@ -211,7 +200,7 @@ module Paperclip
           end
         end
 
-        after_flush_writes
+        after_flush_write
 
         @queued_for_write = {}
       end
