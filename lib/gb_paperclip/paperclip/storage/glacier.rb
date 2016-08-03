@@ -222,6 +222,13 @@ module Paperclip
         @queued_for_delete = []
       end
 
+      def delete_all
+        glacier_ids.each do |path, id|
+          log("deleting from glacier #{path}")
+          glacier_vault.archive(id).delete
+        end
+      end
+
       # noinspection RubyUnusedLocalVariable
       def copy_to_local_file(style, local_dest_path) #:nodoc:
         raise ArgumentError.new('Model need to have :glacier_id string field!') unless instance.respond_to? :glacier_ids
