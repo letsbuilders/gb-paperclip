@@ -144,6 +144,54 @@ module Paperclip
 
     prepend SaveExtension
 
+    def reprocess!(*style_args)
+      saved_only_process, @options[:only_process]     = @options[:only_process], style_args
+      saved_preserve_files, @options[:preserve_files] = @options[:preserve_files], true
+      @reprocessing                                   = true
+      begin
+        assign(self)
+        @queued_for_write.delete(:original) unless process_style?(:original, only_process)
+        save
+        instance.save
+      rescue Errno::EACCES => e
+        warn "#{e} - skipping file."
+        false
+      ensure
+        @options[:only_process]   = saved_only_process
+        @options[:preserve_files] = saved_preserve_files
+        @reprocessing             = false
+      end
+    end
+
+    def assign_attributes
+      @queued_for_write[:original] = @file
+      unless @reprocessing && !process_style?(:original, only_process)
+        assign_file_information
+        assign_fingerprint { @file.fingerprint }
+        assign_timestamps
+      end
+    end
+
+    def reset_file_if_original_reprocessed
+      unless @reprocessing && !process_style?(:original, only_process)
+        instance_write(:file_size, @queued_for_write[:original].size)
+        assign_fingerprint { @queued_for_write[:original].fingerprint }
+        reset_updater
+      end
+    end
+
+    def post_process(*style_args) #:nodoc:
+      return if @queued_for_write[:original].nil? && !@reprocessing
+
+      instance.run_paperclip_callbacks(:post_process) do
+        instance.run_paperclip_callbacks(:"#{name}_post_process") do
+          if !@options[:check_validity_before_processing] || !instance.errors.any?
+            post_process_styles(*style_args)
+          end
+        end
+      end
+    end
+
     def processing(style)
       style = get_style_name(style)
       begin
