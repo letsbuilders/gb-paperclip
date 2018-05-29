@@ -1,5 +1,0 @@
-test:
-  adapter: sqlite3
-  database: ":memory:?cache=shared"
-  pool: 5
-

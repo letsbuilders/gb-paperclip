@@ -10,8 +10,8 @@ module ModelReconstruction
     end
 
     klass.reset_column_information
-    klass.connection_pool.clear_table_cache!(klass.table_name) if klass.connection_pool.respond_to?(:clear_table_cache!)
-    klass.connection.schema_cache.clear_table_cache!(klass.table_name) if klass.connection.respond_to?(:schema_cache)
+    klass.connection_pool.clear_data_source_cache!(klass.table_name) if klass.connection_pool.respond_to?(:clear_table_cache!)
+    klass.connection.schema_cache.clear_data_source_cache!(klass.table_name) if klass.connection.respond_to?(:schema_cache)
     klass
   end
 

@@ -251,7 +251,10 @@ describe Paperclip::CopyAdapter do
     end
     context 'with http url proxy adapter' do
       before do
+        mime_type = Object.new
+        mime_type.stubs(:presence).returns('image/png')
         @open_return = StringIO.new('xxx')
+        @open_return.stubs(:meta).returns('content-type' => mime_type)
         @open_return.stubs(:content_type).returns('image/png')
         Paperclip::HttpUrlProxyAdapter.any_instance.stubs(:download_content).returns(@open_return)
         @url              = 'http://thoughtbot.com/images/thoughtbot-logo.png'
