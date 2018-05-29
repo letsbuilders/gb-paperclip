@@ -1,8 +1,9 @@
 class FakeRails
-  def initialize(env, root)
-    @env  = env
-    @root = root
+  module VERSION
+    MAJOR = 4
   end
+
+  cattr_accessor :env, :root
 
   attr_accessor :env, :root
 

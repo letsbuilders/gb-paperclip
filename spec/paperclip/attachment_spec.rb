@@ -28,7 +28,7 @@ describe Paperclip::Attachment do
         end
       end
       sleep(0.1)
-      GBDispatch.dispatch_sync :save do
+      GBDispatch.dispatch_sync(:save) do
         @dummy.save
       end
       expect(async_flag).to eq true

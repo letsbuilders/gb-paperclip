@@ -67,7 +67,7 @@ module ActiveRecord
   end
 end
 
-
+require 'gb_dispatch/active_record_patch'
 
 FIXTURES_DIR              = File.join(File.dirname(__FILE__), 'fixtures')
 ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + '/debug.log')
@@ -81,7 +81,9 @@ Paperclip::HttpUrlProxyAdapter.register
 
 Dir[File.join(ROOT, 'spec', 'support', '**', '*.rb')].each { |f| require f }
 
-Rails                               = FakeRails.new('test', Pathname.new(ROOT).join('tmp'))
+FakeRails.env = 'test'
+FakeRails.root = Pathname.new(ROOT).join('tmp')
+Rails = FakeRails
 ActiveSupport::Deprecation.silenced = true
 
 RSpec.configure do |config|
@@ -90,6 +92,7 @@ RSpec.configure do |config|
   config.include TestData
   config.extend VersionHelper
   config.extend RailsHelpers::ClassMethods
+  config.include Reporting
   config.mock_framework = :mocha
   config.before(:all) do
     FileUtils.mkdir_p Pathname.new(ROOT).join('tmp')

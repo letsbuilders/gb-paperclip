@@ -44,11 +44,11 @@ module Paperclip
         success = convert(parameters, :source => "#{File.expand_path(src.path)}[0]", :dest => File.expand_path(dst.path))
         @attachment.finished_processing @style if @attachment && @style
         success
-      rescue Cocaine::ExitStatusError
+      rescue Terrapin::ExitStatusError
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
-      rescue Cocaine::CommandNotFoundError
+      rescue Terrapin::CommandNotFoundError
         @attachment.failed_processing @style if @attachment && @style
         dst.close! if dst && dst.respond_to?(:close!)
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.') if whiny
@@ -83,9 +83,9 @@ module Paperclip
 
       cmd = '-loglevel quiet -itsoffset :offset -i :input_file -y -vcodec mjpeg -vframes 1 -an -f rawvideo :output_file'
       begin
-        Paperclip.run('avconv', cmd, offset: time_offset, input_file: File.expand_path(file.path), output_file: File.expand_path(dst.path) )
-      rescue Cocaine::CommandNotFoundError
-        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `avconv` command. Please install libav')
+        Paperclip.run('ffmpeg', cmd, offset: time_offset, input_file: File.expand_path(file.path), output_file: File.expand_path(dst.path) )
+      rescue Terrapin::CommandNotFoundError
+        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `ffmpeg` command. Please install ffmpeg')
       end
       @current_geometry = @file_geometry_parser.from_file(dst)
       @image_file       = dst
@@ -108,10 +108,11 @@ module Paperclip
 
     def get_duration(file)
       begin
-        cmd = %Q[-loglevel quiet -show_format_entry duration "#{File.expand_path(file.path)}" ]
-        Paperclip.run('avprobe', cmd)
-      rescue Cocaine::CommandNotFoundError
-        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `avprobe` command. Please install libav')
+        cmd = %Q[-loglevel quiet -of json -show_entries format=duration "#{File.expand_path(file.path)}" ]
+        result = Paperclip.run('ffprobe', cmd)
+        JSON.parse(result)['format']['duration']
+      rescue Terrapin::CommandNotFoundError
+        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `ffprobe` command. Please install libav')
       end
     end
   end
