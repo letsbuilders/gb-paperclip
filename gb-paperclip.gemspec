@@ -9,18 +9,18 @@ Gem::Specification.new do |s|
   s.version     = GBPaperclip::VERSION
   s.authors     = ['Kacper Kawecki']
   s.email       = ['kacper@geniebelt.com']
-  s.homepage    = 'http://tools.bobisdead.com'
-  s.summary     = 'Genie Belt Paperclip extensions'
+  s.homepage    = 'https://tools.gb4.co'
+  s.summary     = 'GenieBelt Paperclip extensions'
   s.description = 'Extensions for paperclip'
 
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.files         = `git ls-files lib`.split("\n") + ['README.md']
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ['lib']
+  s.metadata['allowed_push_host'] = 'https://t.gb4.co/'
 
   s.add_dependency 'paperclip', '>=6.0.0'
   s.add_dependency 'gb_dispatch', '>= 0.1.1'
-  #s.metadata['allowed_push_host'] = 'http://gems.bobisdead.com/'
   s.add_development_dependency('activerecord', '>= 5.0.0')
   s.add_development_dependency('shoulda')
   s.add_development_dependency('rspec', '>=3.0.0')
