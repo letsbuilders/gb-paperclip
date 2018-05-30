@@ -31,6 +31,7 @@ $LOAD_PATH << File.join(ROOT, 'lib')
 $LOAD_PATH << File.join(ROOT, 'lib', 'gb_paperclip')
 require File.join(ROOT, 'lib', 'gb_paperclip.rb')
 
+# Fix rails bug with not creating in memory database with '?cache=shared' option
 module ActiveRecord
   module ConnectionHandling # :nodoc:
     def sqlite3_connection(config)
