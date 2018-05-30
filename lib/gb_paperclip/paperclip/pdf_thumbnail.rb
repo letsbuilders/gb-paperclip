@@ -66,11 +66,11 @@ module Paperclip
         source_path +='[0]' unless animated?
 
         convert(parameters, :source => source_path, :dest => File.expand_path(dst.path))
-      rescue Cocaine::ExitStatusError => e
+      rescue Terrapin::ExitStatusError => e
         @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
         raise Paperclip::Error, "There was an error processing the thumbnail for #{@basename}" if @whiny
-      rescue Cocaine::CommandNotFoundError
+      rescue Terrapin::CommandNotFoundError
         @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
         raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `convert` command. Please install ImageMagick.')

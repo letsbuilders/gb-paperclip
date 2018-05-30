@@ -10,8 +10,8 @@ module ModelReconstruction
     end
 
     klass.reset_column_information
-    klass.connection_pool.clear_table_cache!(klass.table_name) if klass.connection_pool.respond_to?(:clear_table_cache!)
-    klass.connection.schema_cache.clear_table_cache!(klass.table_name) if klass.connection.respond_to?(:schema_cache)
+    klass.connection_pool.clear_data_source_cache!(klass.table_name) if klass.connection_pool.respond_to?(:clear_table_cache!)
+    klass.connection.schema_cache.clear_data_source_cache!(klass.table_name) if klass.connection.respond_to?(:schema_cache)
     klass
   end
 
@@ -26,15 +26,15 @@ module ModelReconstruction
 
   def rebuild_model(options = {})
     ActiveRecord::Base.connection.create_table :dummies, force: true do |table|
-      table.column :title, :string
-      table.column :other, :string
-      table.column :avatar_file_name, :string
-      table.column :avatar_content_type, :string
-      table.column :avatar_file_size, :integer
-      table.column :avatar_updated_at, :datetime
-      table.column :avatar_fingerprint, :string
-      table.column :processing, :boolean
-      table.column :processed_styles, :text
+      table.column :title, :string, null: true
+      table.column :other, :string, null: true
+      table.column :avatar_file_name, :string, null: true
+      table.column :avatar_content_type, :string, null: true
+      table.column :avatar_file_size, :integer, null: true
+      table.column :avatar_updated_at, :datetime, null: true
+      table.column :avatar_fingerprint, :string, null: true
+      table.column :processing, :boolean, null: true
+      table.column :processed_styles, :text, null: true
     end
     rebuild_class options
   end

@@ -3,7 +3,7 @@ require 'zip'
 module Paperclip
   class ZipEntryAdapter < AbstractAdapter
     # @param target [Zip::Entry]
-    def initialize(target)
+    def initialize(target, options = {})
       @target                = target
       self.original_filename = @target.name.force_encoding('UTF-8').encode('UTF-16be', :invalid => :replace, :replace => '_').encode('UTF-8').split('/').pop
       @tempfile              = copy_to_tempfile(@target)

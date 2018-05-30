@@ -2,7 +2,7 @@ require 'paperclip/io_adapters/abstract_adapter'
 module Paperclip
   class CopyAdapter < AbstractAdapter
     # @param target [Zip::Entry]
-    def initialize(target)
+    def initialize(target, options = {})
       @target                = target
       self.original_filename = @target.original_filename
       @size                  = @target.size

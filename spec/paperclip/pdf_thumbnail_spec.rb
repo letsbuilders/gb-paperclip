@@ -50,7 +50,7 @@ describe Paperclip::PdfThumbnail do
         it "lets us know when a command isn't found versus a processing error" do
           old_path = ENV['PATH']
           begin
-            Cocaine::CommandLine.path        = ''
+            Terrapin::CommandLine.path        = ''
             Paperclip.options[:command_path] = ''
             ENV['PATH']                      = ''
             assert_raises(Paperclip::Errors::CommandNotFoundError) do
@@ -104,7 +104,7 @@ describe Paperclip::PdfThumbnail do
 
         output_file = thumb.make
 
-        command = Cocaine::CommandLine.new('identify', '-format %wx%h :file')
+        command = Terrapin::CommandLine.new('identify', '-format %wx%h :file')
         assert_equal '50x50', command.run(file: output_file.path).strip
       end
 
@@ -191,7 +191,7 @@ describe Paperclip::PdfThumbnail do
           it "lets us know when a command isn't found versus a processing error" do
             old_path = ENV['PATH']
             begin
-              Cocaine::CommandLine.path        = ''
+              Terrapin::CommandLine.path        = ''
               Paperclip.options[:command_path] = ''
               ENV['PATH']                      = ''
               assert_raises(Paperclip::Errors::CommandNotFoundError) do
@@ -347,7 +347,7 @@ describe Paperclip::PdfThumbnail do
         it "lets us know when a command isn't found versus a processing error" do
           old_path = ENV['PATH']
           begin
-            Cocaine::CommandLine.path        = ''
+            Terrapin::CommandLine.path        = ''
             Paperclip.options[:command_path] = ''
             ENV['PATH']                      = ''
             silence_stream(STDERR) do
@@ -413,7 +413,7 @@ describe Paperclip::PdfThumbnail do
         wait_for_save
         output_file = @attachment.saved[:test]
 
-        command = Cocaine::CommandLine.new('identify', '-format %wx%h :file')
+        command = Terrapin::CommandLine.new('identify', '-format %wx%h :file')
         expect(command.run(file: output_file.path).strip).to eq '50x50'
         output_file.close
       end
@@ -625,7 +625,7 @@ describe Paperclip::PdfThumbnail do
       context 'should call failed processing style if' do
         it 'image magick have wrong params' do
           @attachment.expects(:failed_processing).with(:test)
-          @thumb.stubs(:convert).with(anything, anything).raises(Cocaine::ExitStatusError.new '')
+          @thumb.stubs(:convert).with(anything, anything).raises(Terrapin::ExitStatusError.new '')
           expect { @thumb.make }.not_to raise_error
           wait_for_make
         end
@@ -635,7 +635,7 @@ describe Paperclip::PdfThumbnail do
           @attachment.expects(:failed_processing).with(:test)
           old_path = ENV['PATH']
           begin
-            Cocaine::CommandLine.path        = ''
+            Terrapin::CommandLine.path        = ''
             Paperclip.options[:command_path] = ''
             ENV['PATH']                      = ''
             expect do

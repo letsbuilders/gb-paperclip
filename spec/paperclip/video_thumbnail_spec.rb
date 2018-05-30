@@ -20,8 +20,10 @@ describe Paperclip::VideoThumbnail do
         end
 
         it 'starts with dimensions of 434x66' do
-          cmd = %Q[avprobe -loglevel error -show_format_entry width -show_format_entry height -show_streams "#{@file.path}"]
-          expect(`#{cmd}`.chomp).to eq "width=800\nheight=480"
+          cmd = %Q[ffprobe -loglevel error -of json -show_entries stream=width,height "#{@file.path}"]
+          result = JSON.parse(`#{cmd}`)
+          expect(result['streams'][1]['width']).to eq 800
+          expect(result['streams'][1]['height']).to eq 480
         end
 
         it 'reports the correct target geometry' do
@@ -49,7 +51,7 @@ describe Paperclip::VideoThumbnail do
       it "lets us know when a command isn't found versus a processing error" do
         old_path = ENV['PATH']
         begin
-          Cocaine::CommandLine.path        = ''
+          Terrapin::CommandLine.path        = ''
           Paperclip.options[:command_path] = ''
           ENV['PATH']                      = ''
           assert_raises(Paperclip::Errors::CommandNotFoundError) do
@@ -98,13 +100,12 @@ describe Paperclip::VideoThumbnail do
     end
 
     it 'crops a EXIF-rotated image properly' do
-      pending('not working yet')
       file  = File.new(fixture_file('7m.mov'))
       thumb = Paperclip::VideoThumbnail.new(file, geometry: '100x100')
 
       output_file = thumb.make
 
-      command = Cocaine::CommandLine.new('identify', '-format %wx%h :file')
+      command = Terrapin::CommandLine.new('identify', '-format %wx%h :file')
       assert_equal '56x100', command.run(file: output_file.path).strip
     end
 
@@ -189,7 +190,7 @@ describe Paperclip::VideoThumbnail do
         it "lets us know when a command isn't found versus a processing error" do
           old_path = ENV['PATH']
           begin
-            Cocaine::CommandLine.path        = ''
+            Terrapin::CommandLine.path        = ''
             Paperclip.options[:command_path] = ''
             ENV['PATH']                      = ''
             assert_raises(Paperclip::Errors::CommandNotFoundError) do
@@ -291,21 +292,21 @@ describe Paperclip::VideoThumbnail do
     end
 
     context 'should call failed processing style if' do
-      it 'avprobe not exists' do
+      it 'ffprobe not exists' do
         @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:get_duration).with(anything).raises(Cocaine::CommandNotFoundError.new '')
+        @thumb.stubs(:get_duration).with(anything).raises(Terrapin::CommandNotFoundError.new '')
         expect { @thumb.make }.to raise_error Paperclip::Errors::CommandNotFoundError
       end
 
       it 'avconv not exists' do
         @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:create_image).with(anything).raises(Cocaine::CommandNotFoundError.new '')
+        @thumb.stubs(:create_image).with(anything).raises(Terrapin::CommandNotFoundError.new '')
         expect { @thumb.make }.to raise_error Paperclip::Errors::CommandNotFoundError
       end
 
-      it 'avconv or avprobe have wrong params' do
+      it 'avconv or ffprobe have wrong params' do
         @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:create_image).with(anything).raises(Cocaine::ExitStatusError.new '')
+        @thumb.stubs(:create_image).with(anything).raises(Terrapin::ExitStatusError.new '')
         expect { @thumb.make }.to raise_error
       end
 
@@ -313,7 +314,7 @@ describe Paperclip::VideoThumbnail do
         @attachment.expects(:failed_processing).with(:test)
         old_path = ENV['PATH']
         begin
-          Cocaine::CommandLine.path        = ''
+          Terrapin::CommandLine.path        = ''
           Paperclip.options[:command_path] = ''
           ENV['PATH']                      = ''
           expect do
