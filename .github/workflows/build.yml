@@ -1,0 +1,73 @@
+name: Build gem
+on:
+  release:
+    types:
+      - released
+env:
+  RACK_ENV: test
+  GEM_HOST: https://t.gb4.co/gems
+  ImageOS: ubuntu20
+  DOC_DIR: gb_paperclip
+  BUNDLER_VERSION: 2.2.30
+jobs:
+  release:
+    name: Run test
+    runs-on: [self-hosted,linux,x64,gb-infra]
+    env:
+      SIMPLECOV: json
+      ImageOS: ubuntu20
+    container:
+      image: ruby:2.7-alpine
+      volumes:
+        - /mnt/efs/docs-storage/:/mnt/efs/docs-storage/
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          apk add --no-cache --update build-base \
+              linux-headers \
+              bash openssh-client git tar \
+              postgresql-dev \
+              nodejs \
+              tzdata \
+              sqlite sqlite-dev sqlite-libs \
+              imagemagick \
+              ffmpeg x264 x265 libvpx libtheora \
+              file
+          gem install bundler:${BUNDLER_VERSION}
+      - name: Cache gems
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-build-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-build-
+      - name: Install gems
+        run: |
+          bundle config path vendor/bundle
+          bundle config set with 'development test'
+          bundle install --jobs 16 --retry 3
+      - name: Runs tests
+        run: |
+          bundle exec rspec -f j -o rspec_results.json -f p
+      - name: Build gem
+        shell: bash
+        run: |
+          rake tc_build
+      - name: Release
+        shell: bash
+        run: |
+          mkdir -p ~/.gem/
+          echo "$GEM_HOST: Basic ${{ secrets.GEM_CREDENTIALS }}" > ~/.gem/credentials
+          chmod 0600 ~/.gem/credentials
+          for GEM in ./*.gem; do
+            gem push "$GEM" --host "$GEM_HOST"
+          done
+      - name: Build documentaion
+        shell: bash
+        run: |
+          mkdir -p "/mnt/efs/docs-storage/${DOC_DIR}/"
+          gem install yard
+          yardoc --protected --private --embed-mixins --backtrace --no-progress
+          cp -Rf doc/. "/mnt/efs/docs-storage/${DOC_DIR}/"
