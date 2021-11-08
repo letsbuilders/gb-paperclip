@@ -27,7 +27,7 @@ jobs:
         run: |
           apk add --no-cache --update build-base \
               linux-headers \
-              bash openssh-client git tar \
+              bash openssh-client git tar libcurl \
               postgresql-dev \
               nodejs \
               tzdata \

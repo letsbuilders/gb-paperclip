@@ -5,7 +5,7 @@ RUN apk add --no-cache --update build-base \
                                 git \
                                 postgresql-dev \
                                 nodejs \
-                                tzdata \
+                                tzdata libcurl curl-dev libxml2 libxml2-dev gcc make \
                                 sqlite sqlite-dev sqlite-libs \
                                 imagemagick \
                                 ffmpeg x264 x265 libvpx libtheora \

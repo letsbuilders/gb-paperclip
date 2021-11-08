@@ -24,7 +24,7 @@ jobs:
               bash openssh-client git tar \
               postgresql-dev \
               nodejs \
-              tzdata \
+              tzdata libcurl curl-dev libxml2 libxml2-dev gcc make \
               sqlite sqlite-dev sqlite-libs \
               imagemagick \
               ffmpeg x264 x265 libvpx libtheora \
@@ -66,6 +66,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          apt install libcurl4 libxml2 build-essentials
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
