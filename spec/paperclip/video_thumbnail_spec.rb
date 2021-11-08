@@ -87,9 +87,7 @@ describe Paperclip::VideoThumbnail do
       end
 
       it 'sends the right command to convert when sent #make' do
-        @thumb.expects(:convert).with do |*arg|
-          arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+5" +repage :dest'
-        end
+        expect(@thumb).to receive(:convert).with(':source -auto-orient -resize "100x" -crop "100x50+0+5" +repage :dest', anything)
         @thumb.make
       end
 
@@ -121,9 +119,7 @@ describe Paperclip::VideoThumbnail do
       end
 
       it 'sends the right command to convert when sent #make' do
-        @thumb.expects(:convert).with do |*arg|
-          arg[0] == '-strip :source -auto-orient -resize "100x" -crop "100x50+0+5" +repage :dest'
-        end
+        expect(@thumb).to receive(:convert).with('-strip :source -auto-orient -resize "100x" -crop "100x50+0+5" +repage :dest', anything)
         @thumb.make
       end
 
@@ -161,9 +157,7 @@ describe Paperclip::VideoThumbnail do
       end
 
       it 'sends the right command to convert when sent #make' do
-        @thumb.expects(:convert).with do |*arg|
-          arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+5" +repage -strip -depth 8 :dest'
-        end
+        expect(@thumb).to receive(:convert).with(':source -auto-orient -resize "100x" -crop "100x50+0+5" +repage -strip -depth 8 :dest', anything)
         @thumb.make
       end
 
@@ -280,38 +274,38 @@ describe Paperclip::VideoThumbnail do
   context 'Attachment processing info' do
     before(:each) do
       @file       = File.new(fixture_file('7m.mov'), 'rb')
-      @attachment = stub
+      @attachment = double
       @thumb      = Paperclip::VideoThumbnail.new(@file, { geometry: '100x100', style: :test }, @attachment)
     end
 
     after(:each) { @file.close }
 
     it 'should call finished processing style if successes' do
-      @attachment.expects(:finished_processing).with(:test)
+      expect(@attachment).to receive(:finished_processing).with(:test)
       @thumb.make
     end
 
     context 'should call failed processing style if' do
       it 'ffprobe not exists' do
-        @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:get_duration).with(anything).raises(Terrapin::CommandNotFoundError.new '')
+        expect(@attachment).to receive(:failed_processing).with(:test)
+        allow(@thumb).to receive(:get_duration).with(anything).and_raise(Terrapin::CommandNotFoundError.new '')
         expect { @thumb.make }.to raise_error Paperclip::Errors::CommandNotFoundError
       end
 
       it 'avconv not exists' do
-        @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:create_image).with(anything).raises(Terrapin::CommandNotFoundError.new '')
+        expect(@attachment).to receive(:failed_processing).with(:test)
+        allow(@thumb).to receive(:create_image).and_raise(Terrapin::CommandNotFoundError.new '')
         expect { @thumb.make }.to raise_error Paperclip::Errors::CommandNotFoundError
       end
 
       it 'avconv or ffprobe have wrong params' do
-        @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:create_image).with(anything).raises(Terrapin::ExitStatusError.new '')
+        expect(@attachment).to receive(:failed_processing).with(:test)
+        allow(@thumb).to receive(:create_image).and_raise(Terrapin::ExitStatusError.new '')
         expect { @thumb.make }.to raise_error
       end
 
       it 'image magick error' do
-        @attachment.expects(:failed_processing).with(:test)
+        expect(@attachment).to receive(:failed_processing).with(:test)
         old_path = ENV['PATH']
         begin
           Terrapin::CommandLine.path        = ''
@@ -328,8 +322,8 @@ describe Paperclip::VideoThumbnail do
       end
 
       it 'throws any error' do
-        @attachment.expects(:failed_processing).with(:test)
-        @thumb.stubs(:create_image).with(anything).raises('test error')
+        expect(@attachment).to receive(:failed_processing).with(:test)
+        allow(@thumb).to receive(:create_image).with(anything).and_raise('test error')
         expect { @thumb.make }.to raise_error
       end
     end

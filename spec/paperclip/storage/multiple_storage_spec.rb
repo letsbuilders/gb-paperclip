@@ -105,12 +105,12 @@ describe Paperclip::Storage::MultipleStorage do
     context 'exists?' do
       it 'should delegate call to main store' do
         dummy = Dummy.new
-        dummy.avatar.main_store.expects(:exists?).with(:original)
+        expect(dummy.avatar.main_store).to receive(:exists?).with(:original)
         dummy.avatar.backup_stores.each do |store|
-          store.expects(:exists?).never
+          expect(store).not_to receive(:exists?)
         end
         dummy.avatar.additional_stores.each do |store|
-          store.expects(:exists?).never
+          expect(store).not_to receive(:exists?)
         end
         dummy.avatar.exists? :original
       end
@@ -132,7 +132,7 @@ describe Paperclip::Storage::MultipleStorage do
         dummy  = Dummy.new
         stores = [dummy.avatar.main_store, dummy.avatar.backup_stores, dummy.avatar.additional_stores].flatten
         stores.each do |store|
-          store.expects(:flush_writes)
+          expect(store).to receive(:flush_writes)
         end
         dummy.avatar.flush_writes
       end
@@ -168,14 +168,14 @@ describe Paperclip::Storage::MultipleStorage do
 
       context 'asynchronous backup' do
         it 'should handle save errors' do
-          @avatar.backup_stores.last.stubs(:flush_writes).raises(ArgumentError.new 'backup failed!')
+          allow(@avatar.backup_stores.last).to receive(:flush_writes).and_raise(ArgumentError.new 'backup failed!')
           expect { @avatar.flush_writes }.to raise_error ArgumentError, 'backup failed!'
         end
       end
 
       context 'queued_for_write' do
         it 'should call lock when copying queues for write' do
-          @avatar.expects(:with_lock).with(anything)
+          expect(@avatar).to receive(:with_lock)
           @avatar.flush_writes
         end
 
@@ -252,7 +252,7 @@ describe Paperclip::Storage::MultipleStorage do
       end
 
       it 'should try to call main store if it respond to method' do
-        @avatar.main_store.expects(:options_foo)
+        expect(@avatar.main_store).to receive(:options_foo)
         @avatar.options_foo
       end
     end
@@ -274,10 +274,10 @@ describe Paperclip::Storage::MultipleStorage do
         stores = [@avatar.main_store, @avatar.additional_stores].flatten
         stores.each do |store|
           store.sleep_time = 0
-          store.expects(:flush_deletes)
+          expect(store).to receive(:flush_deletes)
         end
         @avatar.backup_stores.each do |store|
-          store.expects(:flush_deletes).never
+          expect(store).not_to receive(:flush_deletes)
         end
         @avatar.flush_deletes
         sleep(0.03)
@@ -313,66 +313,66 @@ describe Paperclip::Storage::MultipleStorage do
       end
 
       it 'should try to copy using main store' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(:foo)
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(:foo)
         [@avatar.additional_stores, @avatar.backup_stores].flatten.each do |store|
-          store.expects(:copy_to_local_file).never
+          expect(store).not_to receive(:copy_to_local_file)
         end
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'if copying for main store it should back to additional stores - first passing' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).returns(true)
-        @avatar.additional_stores.last.expects(:copy_to_local_file).never
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_return(true)
+        expect(@avatar.additional_stores.last).not_to receive(:copy_to_local_file)
         @avatar.backup_stores.each do |store|
-          store.expects(:copy_to_local_file).never
+          expect(store).not_to receive(:copy_to_local_file)
         end
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'if copying for main store it should back to additional stores - last passing' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
-        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(true)
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.additional_stores.last).to receive(:copy_to_local_file).and_return(true)
         @avatar.backup_stores.each do |store|
-          store.expects(:copy_to_local_file).never
+          expect(store).not_to receive(:copy_to_local_file)
         end
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'if copying for main store it should back to additional stores then to backup' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
-        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
-        @avatar.backup_stores.first.expects(:copy_to_local_file).returns(true)
-        @avatar.backup_stores.last.expects(:copy_to_local_file).never
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.additional_stores.last).to receive(:copy_to_local_file).and_return(false)
+expect(@avatar.backup_stores.first).to receive(:copy_to_local_file).and_return(true)
+        expect(@avatar.backup_stores.last).not_to receive(:copy_to_local_file)
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'if copying for main store it should back to additional stores then to backup - first fails' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
-        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
-        @avatar.backup_stores.first.expects(:copy_to_local_file).returns(false)
-        @avatar.backup_stores.last.expects(:copy_to_local_file)
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.additional_stores.last).to receive(:copy_to_local_file).and_return(false)
+expect(@avatar.backup_stores.first).to receive(:copy_to_local_file).and_return(false)
+        expect(@avatar.backup_stores.last).to receive(:copy_to_local_file)
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'if copying for main store it should back to additional stores then to backup - first crashes' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
-        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
-        @avatar.backup_stores.first.expects(:copy_to_local_file).raises('test error')
-        @avatar.backup_stores.last.expects(:copy_to_local_file)
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.additional_stores.last).to receive(:copy_to_local_file).and_return(false)
+        expect(@avatar.backup_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+        expect(@avatar.backup_stores.last).to receive(:copy_to_local_file)
         @avatar.copy_to_local_file(:original, 'test.png')
       end
 
       it 'should return false if all stores fails' do
-        @avatar.main_store.stubs(:copy_to_local_file).returns(false)
-        @avatar.additional_stores.first.stubs(:copy_to_local_file).raises('test error')
-        @avatar.additional_stores.last.expects(:copy_to_local_file).returns(false)
-        @avatar.backup_stores.first.expects(:copy_to_local_file).raises('test error')
-        @avatar.backup_stores.last.expects(:copy_to_local_file).returns(nil)
+        allow(@avatar.main_store).to receive(:copy_to_local_file).and_return(false)
+        allow(@avatar.additional_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.additional_stores.last).to receive(:copy_to_local_file).and_return(false)
+        expect(@avatar.backup_stores.first).to receive(:copy_to_local_file).and_raise('test error')
+expect(@avatar.backup_stores.last).to receive(:copy_to_local_file).and_return(nil)
         expect(@avatar.copy_to_local_file(:original, 'test.png')).to eq false
       end
     end

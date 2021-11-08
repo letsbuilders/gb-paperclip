@@ -79,7 +79,7 @@ describe Paperclip::ZipEntryAdapter do
 
       context 'file with multiple possible content type' do
         before do
-          MIME::Types.stubs(:type_for).returns([MIME::Type.new('image/x-png'), MIME::Type.new('image/png')])
+          allow(MIME::Types).to receive(:type_for).and_return([MIME::Type.new('image/x-png'), MIME::Type.new('image/png')])
           @subject = Paperclip.io_adapters.for(@entry)
         end
 
@@ -103,7 +103,8 @@ describe Paperclip::ZipEntryAdapter do
           end
         end
         @entry = @entries.last
-        @entry.stubs(:name).returns('image:restricted.png')
+        allow(@entry).to receive(:name).and_return('image:restricted.png')
+        allow(@entry).to receive(:name).and_return('image:restricted.png')
         @subject = Paperclip.io_adapters.for(@entry)
       end
 

@@ -25,7 +25,7 @@ module TestData
 end
 
 module FileDebugInfo
-  def initialize(*args)
+  def initialize(*,**)
     super
     @opened_at = Time.now
     @opener    = caller_locations(1, 20).join("\n")

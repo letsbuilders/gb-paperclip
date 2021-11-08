@@ -6,7 +6,7 @@ module Paperclip
       def validate_each(record, attribute, value)
         adapter  = Paperclip.io_adapters.for(value)
         detector = Paperclip::MediaTypeSpoofDetector.using(adapter, value.original_filename, value.content_type)
-        if detector.content_type_mismatch?
+        if content_type_mismatch?(detector)
           record.send "#{attribute}_spoof_warning=", true
           record.send "#{attribute}_spoof_content_type=", detector.spoofed_content_type
         end
@@ -15,6 +15,16 @@ module Paperclip
 
       def self.helper_method_name
         :validates_spoof_warning
+      end
+
+      private
+
+      def content_type_mismatch?(detector)
+        if detector.is_a? Hash
+          detector[:content_type_mismatch?]
+        else
+          detector.content_type_mismatch?
+        end
       end
     end
 

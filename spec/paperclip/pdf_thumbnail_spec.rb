@@ -85,16 +85,16 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest',
+            hash_including(source: "#{File.expand_path(@thumb.file.path)}[0]")
+          )
           @thumb.make
         end
 
         it 'creates the thumbnail when sent #make' do
           dst = @thumb.make
-          assert_match /100x50/, `identify "#{dst.path}"`
+          assert_match /100x50|108x36/, `identify "#{dst.path}"` # Different size reported by different version of image magick
         end
       end
 
@@ -120,16 +120,16 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == '-strip :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            '-strip :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest',
+            hash_including(source: "#{File.expand_path(@thumb.file.path)}[0]")
+          )
           @thumb.make
         end
 
         it 'creates the thumbnail when sent #make' do
           dst = @thumb.make
-          assert_match /100x50/, `identify "#{dst.path}"`
+          assert_match /100x50|108x36/, `identify "#{dst.path}"` # Different sizes reported by different versions of image magick
         end
 
         context 'redefined to have bad source_file_options setting' do
@@ -161,16 +161,16 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage -strip -depth 8 :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.file.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            ':source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage -strip -depth 8 :dest',
+            hash_including(source: "#{File.expand_path(@thumb.file.path)}[0]")
+          )
           @thumb.make
         end
 
         it 'creates the thumbnail when sent #make' do
           dst = @thumb.make
-          assert_match /100x50/, `identify "#{dst.path}"`
+          assert_match /100x50|108x36/, `identify "#{dst.path}"` # Different versions reported by different versions of image magick
         end
 
         context 'redefined to have bad convert_options setting' do
@@ -221,10 +221,7 @@ describe Paperclip::PdfThumbnail do
       context 'being thumbnailed with default animated option (true)' do
         it 'calls identify to check for animated images when sent #make' do
           thumb = Paperclip::PdfThumbnail.new(@file, geometry: '100x50#')
-          thumb.expects(:identify).at_least_once.with do |*arg|
-            arg[0] == '-format %m :file' &&
-                arg[1][:file] == "#{File.expand_path(thumb.file.path)}[0]"
-          end
+          expect(thumb).to receive(:identify).at_least(:once).with('-format %m :file', hash_including(file: "#{File.expand_path(thumb.file.path)}[0]"))
           thumb.make
         end
       end
@@ -384,10 +381,10 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == '-background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.safe_copy.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            '-background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest',
+            hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
+          )
           @thumb.make
           wait_for_make
         end
@@ -432,10 +429,10 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == '-strip -background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.safe_copy.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            '-strip -background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage :dest',
+            hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
+          )
           @thumb.make
           wait_for_make
         end
@@ -483,10 +480,10 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'sends the right command to convert when sent #make' do
-          @thumb.expects(:convert).with do |*arg|
-            arg[0] == '-background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage -strip -depth 8 :dest' &&
-                arg[1][:source] == "#{File.expand_path(@thumb.safe_copy.path)}[0]"
-          end
+          expect(@thumb).to receive(:convert).with(
+            '-background white -flatten :source -auto-orient -resize "100x" -crop "100x50+0+39!" +repage -strip -depth 8 :dest',
+            hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
+          )
           @thumb.make
           wait_for_make
         end
@@ -609,30 +606,30 @@ describe Paperclip::PdfThumbnail do
       after(:each) { @file.close }
 
       it 'should call finished processing style if successes' do
-        @attachment.expects(:finished_processing).with(:test)
+        expect(@attachment).to receive(:finished_processing).with(:test)
         @thumb.make
         wait_for_make
         wait_for_save
       end
 
       it 'should call finished processing style if successes and is_dirty' do
-        @attachment.expects(:finished_processing).with(:test)
-        @attachment.stubs(:is_dirty?).returns(true)
+        expect(@attachment).to receive(:finished_processing).with(:test)
+        allow(@attachment).to receive(:is_dirty?).and_return(true)
         @thumb.make
         wait_for_make
       end
 
       context 'should call failed processing style if' do
         it 'image magick have wrong params' do
-          @attachment.expects(:failed_processing).with(:test)
-          @thumb.stubs(:convert).with(anything, anything).raises(Terrapin::ExitStatusError.new '')
+          expect(@attachment).to receive(:failed_processing).with(:test)
+          allow(@thumb).to receive(:convert).with(anything, anything).and_raise(Terrapin::ExitStatusError.new '')
           expect { @thumb.make }.not_to raise_error
           wait_for_make
         end
 
         it 'image magick error' do
           @thumb.current_geometry
-          @attachment.expects(:failed_processing).with(:test)
+          expect(@attachment).to receive(:failed_processing).with(:test)
           old_path = ENV['PATH']
           begin
             Terrapin::CommandLine.path        = ''
@@ -650,23 +647,23 @@ describe Paperclip::PdfThumbnail do
         end
 
         it 'convert throws any error' do
-          @attachment.expects(:failed_processing).with(:test)
-          @thumb.stubs(:convert).with(anything, anything).raises('test error')
+          expect(@attachment).to receive(:failed_processing).with(:test)
+          allow(@thumb).to receive(:convert).with(anything, anything).and_raise('test error')
           expect { @thumb.make }.not_to raise_error
           wait_for_make
         end
 
         it 'save throws any error' do
-          @attachment.expects(:failed_processing).with(:test)
-          @attachment.stubs(:flush_writes).with(anything).raises('test error')
+          expect(@attachment).to receive(:failed_processing).with(:test)
+          allow(@attachment).to receive(:flush_writes).with(anything).and_raise('test error')
           expect { @thumb.make }.not_to raise_error
           wait_for_make
           wait_for_save
         end
 
         it 'attachment throw error' do
-          @attachment.expects(:failed_processing).with(:test)
-          @attachment.stubs(:is_saving?).raises('test error')
+          expect(@attachment).to receive(:failed_processing).with(:test)
+          allow(@attachment).to receive(:is_saving?).and_raise('test error')
           @thumb.make
           wait_for_make
         end
