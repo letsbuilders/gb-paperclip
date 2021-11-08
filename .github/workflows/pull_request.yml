@@ -9,7 +9,7 @@ env:
 jobs:
   test:
     name: Run test
-    runs-on: [self-hosted,linux,x64]
+    runs-on: ubuntu-latest
     env:
       SIMPLECOV: json
       ImageOS: ubuntu20
@@ -60,7 +60,7 @@ jobs:
   lint:
     name: Run lint checks
     if: ${{ github.event_name  == 'pull_request' }}
-    runs-on: [self-hosted,linux,x64]
+    runs-on: ubuntu-latest
     env:
       ImageOS: ubuntu20
     steps:

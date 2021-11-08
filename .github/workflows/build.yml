@@ -12,7 +12,7 @@ env:
 jobs:
   release:
     name: Run test
-    runs-on: [self-hosted,linux,x64,gb-infra]
+    runs-on: ubuntu-latest
     env:
       SIMPLECOV: json
       ImageOS: ubuntu20
@@ -64,10 +64,3 @@ jobs:
           for GEM in ./*.gem; do
             gem push "$GEM" --host "$GEM_HOST"
           done
-      - name: Build documentaion
-        shell: bash
-        run: |
-          mkdir -p "/mnt/efs/docs-storage/${DOC_DIR}/"
-          gem install yard
-          yardoc --protected --private --embed-mixins --backtrace --no-progress
-          cp -Rf doc/. "/mnt/efs/docs-storage/${DOC_DIR}/"
