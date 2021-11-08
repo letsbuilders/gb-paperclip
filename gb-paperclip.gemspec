@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://tools.gb4.co'
   s.summary     = 'GenieBelt Paperclip extensions'
   s.description = 'Extensions for paperclip'
-  s.license     = 'Nonstandard'
+  s.license     = '	GPL-2.0-or-later'
 
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.files         = `git ls-files lib`.split("\n") + ['README.md']
