@@ -294,7 +294,7 @@ describe Paperclip::Attachment do
     end
 
     it 'should call processing method' do
-      @attachment.expects(:processing).with(@style)
+      expect(@attachment).to receive(:processing).with(@style)
       @attachment.post_process_style(:thumb, @style)
       expect(@attachment.queued_for_write[:thumb]).to be
     end
@@ -309,14 +309,14 @@ describe Paperclip::Attachment do
     context 'should call failed processing style on error' do
       it 'Paperclip::Errors::NotIdentifiedByImageMagickError' do
         Paperclip::FakeProcessor.raise_error = Paperclip::Errors::NotIdentifiedByImageMagickError.new 'test'
-        @attachment.expects(:failed_processing).with(@style)
+        expect(@attachment).to receive(:failed_processing).with(@style)
         @attachment.post_process_style(:thumb, @style)
         Paperclip::FakeProcessor.raise_error = false
       end
 
       it 'any error' do
         Paperclip::FakeProcessor.raise_error = 'test error'
-        @attachment.expects(:failed_processing).with(@style)
+        expect(@attachment).to receive(:failed_processing).with(@style)
         expect { @attachment.post_process_style(:thumb, @style) }.to raise_error
         Paperclip::FakeProcessor.raise_error = nil
       end

@@ -77,7 +77,7 @@ describe Paperclip::CopyAdapter do
 
       context 'file with multiple possible content type' do
         before do
-          MIME::Types.stubs(:type_for).returns([MIME::Type.new('image/x-png'), MIME::Type.new('image/png')])
+          allow(MIME::Types).to receive(:type_for).and_return([MIME::Type.new('image/x-png'), MIME::Type.new('image/png')])
           @subject = Paperclip::CopyAdapter.new(@original_adapter)
         end
 
@@ -251,12 +251,12 @@ describe Paperclip::CopyAdapter do
     end
     context 'with http url proxy adapter' do
       before do
-        mime_type = Object.new
-        mime_type.stubs(:presence).returns('image/png')
+        mime_type = double
+        allow(mime_type).to receive(:presence).and_return('image/png')
         @open_return = StringIO.new('xxx')
-        @open_return.stubs(:meta).returns('content-type' => mime_type)
-        @open_return.stubs(:content_type).returns('image/png')
-        Paperclip::HttpUrlProxyAdapter.any_instance.stubs(:download_content).returns(@open_return)
+        allow(@open_return).to receive(:meta).and_return('content-type' => mime_type)
+        allow(@open_return).to receive(:content_type).and_return('image/png')
+        allow_any_instance_of(Paperclip::HttpUrlProxyAdapter).to receive(:download_content).and_return(@open_return)
         @url              = 'http://thoughtbot.com/images/thoughtbot-logo.png'
         @original_adapter = Paperclip.io_adapters.for(@url)
         @subject          = Paperclip::CopyAdapter.new(@original_adapter)

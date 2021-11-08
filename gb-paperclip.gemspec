@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   s.homepage    = 'https://tools.gb4.co'
   s.summary     = 'GenieBelt Paperclip extensions'
   s.description = 'Extensions for paperclip'
-  s.license     = '	GPL-2.0-or-later'
+  s.license     = 'GPL-2.0-or-later'
 
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
   s.files         = `git ls-files lib`.split("\n") + ['README.md']
@@ -35,11 +35,11 @@ Gem::Specification.new do |s|
   s.add_development_dependency('fog', '~> 1.0')
   s.add_development_dependency('generator_spec')
   s.add_development_dependency('launchy')
-  s.add_development_dependency('mocha')
   s.add_development_dependency('nokogiri')
   s.add_development_dependency('railties')
   s.add_development_dependency('rake')
   s.add_development_dependency('rspec', '>=3.0.0')
+  s.add_development_dependency('rspec-mocks', '>=3.0.0')
   s.add_development_dependency('rubocop')
   s.add_development_dependency('rubyzip')
   s.add_development_dependency('shoulda')

@@ -94,7 +94,7 @@ RSpec.configure do |config|
   config.extend VersionHelper
   config.extend RailsHelpers::ClassMethods
   config.include Reporting
-  config.mock_framework = :mocha
+  config.mock_framework = :rspec
   config.before(:all) do
     FileUtils.mkdir_p Pathname.new(ROOT).join('tmp')
     rebuild_model

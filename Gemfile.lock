@@ -384,12 +384,12 @@ DEPENDENCIES
   gb_paperclip!
   generator_spec
   launchy
-  mocha
   nokogiri
   paperclip
   railties
   rake
   rspec (>= 3.0.0)
+  rspec-mocks (>= 3.0.0)
   rubocop
   rubyzip
   shoulda

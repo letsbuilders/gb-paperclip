@@ -21,9 +21,9 @@ describe Paperclip::Storage::StorageProxy do
   end
 
   it 'should proxy methods to parent' do
-    stub_parent = stub
+    stub_parent = double
     proxy       = Paperclip::Storage::StorageProxy.new(@options, stub_parent)
-    stub_parent.expects(:foo).with(:bar)
+    expect(stub_parent).to receive(:foo).with(:bar)
     proxy.foo :bar
   end
 

@@ -46,7 +46,7 @@ module Paperclip
       end
 
       def unlink_files(files)
-        super files.compact
+        super files&.compact
       end
 
       def post_process_style(name, style) #:nodoc:

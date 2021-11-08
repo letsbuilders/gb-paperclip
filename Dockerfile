@@ -16,4 +16,4 @@ ENV APP_PATH /opt/project
 # Different layer for gems installation
 WORKDIR $APP_PATH
 COPY . $APP_PATH
-RUN bundle install --jobs `expr $(cat /proc/cpuinfo | grep -c "cpu cores") - 1` --retry 3
+RUN gem install bundler && bundle install --jobs `expr $(cat /proc/cpuinfo | grep -c "cpu cores") - 1` --retry 3
