@@ -13,5 +13,5 @@ end
 
 task :release do
   require './lib/gb_paperclip/version'
-  sh "gem push gb_paperclip-#{GBPaperclip::VERSION}.gem --host http://tools.bobisdead.com/gems"
+  sh "gem push gb_paperclip-#{GBPaperclip::VERSION}.gem --host http://t.gb4.co/gems"
 end

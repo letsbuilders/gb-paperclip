@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.files         = `git ls-files lib`.split("\n") + ['README.md']
   s.executables   = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
   s.require_paths = ['lib']
-  s.metadata['allowed_push_host'] = 'https://t.gb4.co/'
+  s.metadata['allowed_push_host'] = 'https://t.gb4.co/gems'
 
   s.add_runtime_dependency 'gb_dispatch', '>= 0.1.1'
   s.add_runtime_dependency 'paperclip', '>=6.0.0'
