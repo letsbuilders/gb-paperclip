@@ -10,10 +10,14 @@ jobs:
   test:
     name: Run test
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby: [ '2.6', '2.7', '3.0' ]
     env:
       SIMPLECOV: json
       ImageOS: ubuntu20
-    container: ruby:2.7-alpine
+    container: ruby:${{ matrix.ruby }}-alpine
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -34,9 +38,9 @@ jobs:
         uses: actions/cache@v2
         with:
           path: vendor/bundle
-          key: ${{ runner.os }}-gems-test-${{ hashFiles('**/Gemfile.lock') }}
+          key: ${{ runner.os }}-gems-test-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-gems-test-
+            ${{ runner.os }}-gems-test-${{ matrix.ruby }}-
       - name: Install gems
         run: |
           bundle config path vendor/bundle
