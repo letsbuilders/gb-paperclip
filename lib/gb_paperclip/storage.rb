@@ -1,4 +1,6 @@
-require 'paperclip'
+# frozen_string_literal: true
+
+require 'kt-paperclip'
 require 'gb_paperclip/paperclip/storage/glacier'
 require 'gb_paperclip/paperclip/storage/glacier_fog'
 require 'gb_paperclip/paperclip/storage/multiple_storage'

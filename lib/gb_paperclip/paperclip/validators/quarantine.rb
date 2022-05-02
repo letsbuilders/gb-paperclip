@@ -1,4 +1,4 @@
-require 'paperclip'
+require 'kt-paperclip'
 module Paperclip
   module Validators
     class MediaTypeSpoofDetectionValidator
