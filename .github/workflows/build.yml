@@ -8,11 +8,12 @@ env:
   GEM_HOST: https://t.gb4.co/gems
   ImageOS: ubuntu20
   DOC_DIR: gb_paperclip
-  BUNDLER_VERSION: 2.2.30
+  BUNDLER_VERSION: 2.3.12
 jobs:
   release:
     name: Run test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     env:
       SIMPLECOV: json
       ImageOS: ubuntu20
