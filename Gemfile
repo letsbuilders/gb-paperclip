@@ -1,14 +1,8 @@
+# frozen_string_literal: true
+
 source 'http://rubygems.org'
 
 # Declare your gem's dependencies in push.gemspec.
 # Bundler will treat runtime dependencies like base dependencies, and
 # development dependencies will be added by default to the :development group.
 gemspec
-
-gem 'paperclip'
-
-group :test do
-  gem 'activerecord', :require => 'active_record'
-  gem 'sqlite3'
-  gem 'simplecov', :require => false
-end

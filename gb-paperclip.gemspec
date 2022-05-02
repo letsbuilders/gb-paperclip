@@ -22,9 +22,9 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
   s.metadata['allowed_push_host'] = 'https://t.gb4.co/gems'
 
-  s.add_runtime_dependency 'gb_dispatch', '>= 0.1.1'
-  s.add_runtime_dependency 'paperclip', '>=6.0.0'
-  s.add_development_dependency('activerecord', '>= 5.0.0')
+  s.add_runtime_dependency 'gb_dispatch', '>=0.1.1'
+  s.add_runtime_dependency 'kt-paperclip', '~>6.0'
+  s.add_development_dependency('activerecord', '~>6.1.5')
   s.add_development_dependency('appraisal')
   s.add_development_dependency('aws-sdk-core')
   s.add_development_dependency('aws-sdk-glacier')
@@ -43,5 +43,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rubocop')
   s.add_development_dependency('rubyzip')
   s.add_development_dependency('shoulda')
+  s.add_development_dependency('simplecov')
+  s.add_development_dependency('sqlite3')
   s.add_development_dependency('timecop')
 end
