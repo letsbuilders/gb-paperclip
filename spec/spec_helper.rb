@@ -45,7 +45,7 @@ module ActiveRecord
       # Allow database path relative to Rails.root, but only if the database
       # path is not the special path that tells sqlite to build a database only
       # in memory.
-      unless config[:database] =~ /:memory:/
+      unless config[:database] =~ /:memory/
         config[:database] = File.expand_path(config[:database], Rails.root) if defined?(Rails.root)
         dirname = File.dirname(config[:database])
         Dir.mkdir(dirname) unless File.directory?(dirname)
@@ -75,7 +75,7 @@ require 'gb_dispatch/active_record_patch'
 
 FIXTURES_DIR              = File.join(File.dirname(__FILE__), 'fixtures')
 ActiveRecord::Base.logger = Logger.new("#{File.dirname(__FILE__)}/debug.log")
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:?cache=shared', pool: 5)
+ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory?cache=shared', pool: 5)
 
 GBDispatch.logger = Logger.new($stdout)
 Paperclip.options[:logger] = ActiveRecord::Base.logger
