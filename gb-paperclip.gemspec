@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
 
   s.add_runtime_dependency 'gb_dispatch', '>=0.1.1'
   s.add_runtime_dependency 'kt-paperclip', '~>6.0'
-  s.add_development_dependency('activerecord', '~>6.1.5')
+  s.add_development_dependency('activerecord', '>=5.0')
   s.add_development_dependency('appraisal')
   s.add_development_dependency('aws-sdk-core')
   s.add_development_dependency('aws-sdk-glacier')
