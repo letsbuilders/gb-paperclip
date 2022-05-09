@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rubygems'
 require 'rspec'
 require 'active_record'
@@ -35,52 +37,53 @@ require File.join(ROOT, 'lib', 'gb_paperclip.rb')
 module ActiveRecord
   module ConnectionHandling # :nodoc:
     def sqlite3_connection(config)
+      config = config.symbolize_keys
+
       # Require database.
-      unless config[:database]
-        raise ArgumentError, "No database file specified. Missing argument: database"
-      end
+      raise ArgumentError, 'No database file specified. Missing argument: database' unless config[:database]
 
       # Allow database path relative to Rails.root, but only if the database
       # path is not the special path that tells sqlite to build a database only
       # in memory.
-      unless config[:database] =~ /:memory:/
+      unless config[:database] =~ /:memory/
         config[:database] = File.expand_path(config[:database], Rails.root) if defined?(Rails.root)
         dirname = File.dirname(config[:database])
         Dir.mkdir(dirname) unless File.directory?(dirname)
       end
 
       db = SQLite3::Database.new(
-          config[:database].to_s,
-          results_as_hash: true
+        config[:database].to_s,
+        results_as_hash: true
       )
 
-      db.busy_timeout(ConnectionAdapters::SQLite3Adapter.type_cast_config_to_integer(config[:timeout])) if config[:timeout]
+      if config[:timeout]
+        db.busy_timeout(ConnectionAdapters::SQLite3Adapter.type_cast_config_to_integer(config[:timeout]))
+      end
 
       ConnectionAdapters::SQLite3Adapter.new(db, logger, nil, config)
-    rescue Errno::ENOENT => error
-      if error.message.include?("No such file or directory")
+    rescue Errno::ENOENT => e
+      if e.message.include?('No such file or directory')
         raise ActiveRecord::NoDatabaseError
       else
         raise
       end
     end
-
   end
 end
 
 require 'gb_dispatch/active_record_patch'
 
 FIXTURES_DIR              = File.join(File.dirname(__FILE__), 'fixtures')
-ActiveRecord::Base.logger = Logger.new(File.dirname(__FILE__) + '/debug.log')
-ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory:?cache=shared', pool: 5)
+ActiveRecord::Base.logger = Logger.new("#{File.dirname(__FILE__)}/debug.log")
+ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: ':memory?cache=shared', pool: 5)
 
-GBDispatch.logger = Logger.new(STDOUT)
+GBDispatch.logger = Logger.new($stdout)
 Paperclip.options[:logger] = ActiveRecord::Base.logger
 Paperclip::DataUriAdapter.register
 Paperclip::UriAdapter.register
 Paperclip::HttpUrlProxyAdapter.register
 
-Dir[File.join(ROOT, 'spec', 'support', '**', '*.rb')].each { |f| require f }
+Dir[File.join(ROOT, 'spec', 'support', '**', '*.rb')].sort.each { |f| require f }
 
 FakeRails.env = 'test'
 FakeRails.root = Pathname.new(ROOT).join('tmp')
@@ -107,7 +110,7 @@ RSpec.configure do |config|
   end
 
   Aws.config.update({
-                        region:      'us-west-2',
-                        credentials: Aws::Credentials.new('ak_id', 'secret')
+                      region: 'us-west-2',
+                      credentials: Aws::Credentials.new('ak_id', 'secret')
                     })
 end

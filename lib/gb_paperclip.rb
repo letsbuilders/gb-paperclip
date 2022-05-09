@@ -1,8 +1,11 @@
-module GBPaperclip
+# frozen_string_literal: true
 
+# GenieBelt extension for the paperclip library
+# Consist of file processors and storage extensions
+module GBPaperclip
 end
 
-require 'paperclip'
+require 'kt-paperclip'
 require 'gb_paperclip/version'
 require 'gb_paperclip/processors'
 require 'gb_paperclip/storage'
