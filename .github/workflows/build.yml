@@ -22,13 +22,11 @@ jobs:
       volumes:
         - /mnt/efs/docs-storage/:/mnt/efs/docs-storage/
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apk add --no-cache --update build-base \
               linux-headers \
-              bash openssh-client git tar libcurl \
+              bash openssh-client git tar libcurl rsync \
               postgresql-dev \
               nodejs \
               tzdata \
@@ -37,8 +35,10 @@ jobs:
               ffmpeg x264 x265 libvpx libtheora \
               file
           gem install bundler:${BUNDLER_VERSION}
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Cache gems
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-build-${{ hashFiles('**/Gemfile.lock') }}
@@ -55,13 +55,28 @@ jobs:
       - name: Build gem
         shell: bash
         run: |
-          rake tc_build
+          gem build ./gb-paperclip.gemspec
       - name: Release
         shell: bash
         run: |
           mkdir -p ~/.gem/
-          echo "$GEM_HOST: Basic ${{ secrets.GEM_CREDENTIALS }}" > ~/.gem/credentials
+          echo ":github: Bearer ${{ secrets.GITHUB_TOKEN }}" > ~/.gem/credentials
           chmod 0600 ~/.gem/credentials
           for GEM in ./*.gem; do
-            gem push "$GEM" --host "$GEM_HOST"
+            gem push "$GEM" --host "$GEM_HOST" --key github
           done
+      - name: Build documentation
+        shell: bash
+        run: |
+          gem install yard
+          yardoc --protected --private --embed-mixins --backtrace --no-progress --one-page
+      - name: Upload docs
+        uses: actions/upload-artifact@v3
+        with:
+          name: docs
+          path: doc/index.html
+#      - name: Deploy docs
+#        uses: JamesIves/github-pages-deploy-action@v4.3.3
+#        with:
+#          branch: gh-pages
+#          folder: doc

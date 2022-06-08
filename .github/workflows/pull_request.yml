@@ -20,8 +20,6 @@ jobs:
       ImageOS: ubuntu20
     container: ruby:${{ matrix.ruby }}-alpine
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           apk add --no-cache --update build-base \
@@ -35,8 +33,10 @@ jobs:
               ffmpeg x264 x265 libvpx libtheora \
               file
           gem install bundler:${BUNDLER_VERSION}
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Cache gems
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: vendor/bundle
           key: ${{ runner.os }}-gems-test-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}

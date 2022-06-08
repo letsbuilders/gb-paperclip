@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gb_paperclip (2.2.0)
+    gb_paperclip (2.2.1)
       gb_dispatch (>= 0.1.1)
       kt-paperclip (~> 6.0)
 
