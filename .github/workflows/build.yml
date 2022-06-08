@@ -5,9 +5,8 @@ on:
       - released
 env:
   RACK_ENV: test
-  GEM_HOST: https://t.gb4.co/gems
+  GEM_HOST: https://rubygems.pkg.github.com/letsbuilders
   ImageOS: ubuntu20
-  DOC_DIR: gb_paperclip
   BUNDLER_VERSION: 2.3.12
 jobs:
   release:
@@ -19,8 +18,6 @@ jobs:
       ImageOS: ubuntu20
     container:
       image: ruby:2.7-alpine
-      volumes:
-        - /mnt/efs/docs-storage/:/mnt/efs/docs-storage/
     steps:
       - name: Install dependencies
         run: |
