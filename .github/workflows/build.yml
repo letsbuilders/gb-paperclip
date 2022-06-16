@@ -31,7 +31,7 @@ jobs:
               imagemagick \
               ffmpeg x264 x265 libvpx libtheora \
               file
-          gem install bundler:${BUNDLER_VERSION} \
+          gem install bundler:${BUNDLER_VERSION}
           git config --global --add safe.directory '*'
       - name: Checkout code
         uses: actions/checkout@v3
