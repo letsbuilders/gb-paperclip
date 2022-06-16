@@ -17,7 +17,7 @@ jobs:
       SIMPLECOV: json
       ImageOS: ubuntu20
     container:
-      image: ruby:2.7-alpine
+      image: ruby:3.0-alpine
     steps:
       - name: Install dependencies
         run: |
@@ -42,17 +42,22 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gems-build-
       - name: Install gems
+        shell: bash
         run: |
           bundle config path vendor/bundle
           bundle config set with 'development test'
           bundle install --jobs 16 --retry 3
       - name: Runs tests
+        shell: bash
         run: |
           bundle exec rspec -f j -o rspec_results.json -f p
       - name: Build gem
         shell: bash
         run: |
+          git ls-files lib
+          git ls-files -- bin/*
           gem build ./gb-paperclip.gemspec
+          ls -lah
       - name: Release
         shell: bash
         run: |
