@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.5.0'
 
   s.add_runtime_dependency 'gb_dispatch', '>=0.1.1'
-  s.add_runtime_dependency 'kt-paperclip', '~>6.0'
+  s.add_runtime_dependency 'kt-paperclip', '>=6.0'
   s.add_development_dependency('activerecord', '>=5.0')
   s.add_development_dependency('appraisal')
   s.add_development_dependency('aws-sdk-core')

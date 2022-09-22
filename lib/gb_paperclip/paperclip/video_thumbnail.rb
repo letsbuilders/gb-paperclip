@@ -112,7 +112,7 @@ module Paperclip
         result = Paperclip.run('ffprobe', cmd)
         JSON.parse(result)['format']['duration']
       rescue Terrapin::CommandNotFoundError
-        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `ffprobe` command. Please install libav')
+        raise Paperclip::Errors::CommandNotFoundError.new('Could not run the `ffprobe` command. Please install ffmpeg')
       end
     end
   end
