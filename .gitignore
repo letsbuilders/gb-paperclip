@@ -37,4 +37,4 @@ build/
 .rvmrc
 
 # Claude Code artifacts
-.claude/
+.claude/mind.mv2.lock
