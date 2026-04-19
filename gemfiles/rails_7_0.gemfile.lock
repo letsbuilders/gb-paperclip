@@ -1,8 +1,7 @@
 PATH
   remote: ..
   specs:
-    gb_paperclip (2.4.0)
-      gb_dispatch (>= 0.1.3)
+    gb_paperclip (2.5.0)
       kt-paperclip (>= 6.0)
 
 GEM
@@ -116,7 +115,7 @@ GEM
       aws-eventstream (~> 1, >= 1.0.2)
     base64 (0.3.0)
     benchmark (0.5.0)
-    bigdecimal (4.0.1)
+    bigdecimal (4.1.2)
     bourne (1.6.0)
       mocha (~> 1.1)
     builder (3.3.0)
@@ -313,8 +312,6 @@ GEM
       nokogiri (>= 1.5.11, < 2.0.0)
     formatador (1.2.3)
       reline
-    gb_dispatch (0.1.3)
-      concurrent-ruby (>= 1.0)
     generator_spec (0.10.0)
       activesupport (>= 3.0.0)
       railties (>= 3.0.0)
@@ -397,7 +394,7 @@ GEM
     mime-types (3.7.0)
       logger
       mime-types-data (~> 3.2025, >= 3.2025.0507)
-    mime-types-data (3.2026.0303)
+    mime-types-data (3.2026.0414)
     mini_mime (1.1.5)
     mini_portile2 (2.8.9)
     minitest (5.27.0)
@@ -619,7 +616,7 @@ CHECKSUMS
   aws-sigv4 (1.12.1) sha256=6973ff95cb0fd0dc58ba26e90e9510a2219525d07620c8babeb70ef831826c00
   base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
   benchmark (0.5.0) sha256=465df122341aedcb81a2a24b4d3bd19b6c67c1530713fd533f3ff034e419236c
-  bigdecimal (4.0.1) sha256=8b07d3d065a9f921c80ceaea7c9d4ae596697295b584c296fe599dd0ad01c4a7
+  bigdecimal (4.1.2) sha256=53d217666027eab4280346fba98e7d5b66baaae1b9c3c1c0ffe89d48188a3fbd
   bourne (1.6.0) sha256=c889471ee13e7aeda661d84a6bb86aa5665b8b69610e949ffde32f419a3a25a5
   builder (3.3.0) sha256=497918d2f9dca528fdca4b88d84e4ef4387256d984b8154e9d5d3fe5a9c8835f
   childprocess (5.1.0) sha256=9a8d484be2fd4096a0e90a0cd3e449a05bc3aa33f8ac9e4d6dcef6ac1455b6ec
@@ -674,8 +671,7 @@ CHECKSUMS
   fog-xenserver (1.0.0) sha256=1fee6d26500fcaf89b1220008d440807acc9d4804b7a60b5f2b74cc820505855
   fog-xml (0.1.5) sha256=52b9fea10701461dd3eaf9d9839702169b418dbbf50426786b9b74fade373bd6
   formatador (1.2.3) sha256=19fa898133c2c26cdbb5d09f6998c1e137ad9427a046663e55adfe18b950d894
-  gb_dispatch (0.1.3) sha256=f590d360ec3f4600025724c27b33020360dca57a36685426e6dc6c1d4355a993
-  gb_paperclip (2.4.0)
+  gb_paperclip (2.5.0)
   generator_spec (0.10.0) sha256=4343152308dcfb30bba7583fc0e79acf8c626597686cfe3e9b168f6ab745b37a
   globalid (1.3.0) sha256=05c639ad6eb4594522a0b07983022f04aa7254626ab69445a0e493aa3786ff11
   google-apis-compute_v1 (0.142.0) sha256=7129f38209a1a628ea0297d996654dbec7d2adab1f5b13b40693a6448955e7f2
@@ -709,7 +705,7 @@ CHECKSUMS
   mcp (0.8.0) sha256=ae8bd146bb8e168852866fd26f805f52744f6326afb3211e073f78a95e0c34fb
   method_source (1.1.0) sha256=181301c9c45b731b4769bc81e8860e72f9161ad7d66dd99103c9ab84f560f5c5
   mime-types (3.7.0) sha256=dcebf61c246f08e15a4de34e386ebe8233791e868564a470c3fe77c00eed5e56
-  mime-types-data (3.2026.0303) sha256=164af1de5824c5195d4b503b0a62062383b65c08671c792412450cd22d3bc224
+  mime-types-data (3.2026.0414) sha256=461c4c655373a44bd6c5fe54bcf5b7776026ea96e808144b1ec465c4b99148cc
   mini_mime (1.1.5) sha256=8681b7e2e4215f2a159f9400b5816d85e9d8c6c6b491e96a12797e798f8bccef
   mini_portile2 (2.8.9) sha256=0cd7c7f824e010c072e33f68bc02d85a00aeb6fce05bb4819c03dfd3c140c289
   minitest (5.27.0) sha256=2d3b17f8a36fe7801c1adcffdbc38233b938eb0b4966e97a6739055a45fa77d5

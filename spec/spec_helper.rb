@@ -11,7 +11,6 @@ require 'mocha/api'
 require 'bourne'
 require 'ostruct'
 require 'simplecov'
-require 'gb_dispatch'
 require 'aws-sdk-s3'
 require 'aws-sdk-glacier'
 
@@ -68,13 +67,10 @@ if ActiveRecord::VERSION::MAJOR == 7 && ActiveRecord::VERSION::MINOR < 2
   end
 end
 
-require 'gb_dispatch/active_record_patch'
-
 FIXTURES_DIR              = File.join(File.dirname(__FILE__), 'fixtures')
 ActiveRecord::Base.logger = Logger.new("#{File.dirname(__FILE__)}/debug.log")
 ActiveRecord::Base.establish_connection(adapter: 'sqlite3', database: 'file::memory:?cache=shared', pool: 5)
 
-GBDispatch.logger = Logger.new($stdout)
 Paperclip.options[:logger] = ActiveRecord::Base.logger
 Paperclip::DataUriAdapter.register
 Paperclip::UriAdapter.register

@@ -3,7 +3,6 @@ require 'gb_paperclip/paperclip/thumbnail'
 require 'gb_paperclip/paperclip/attachment'
 require 'gb_paperclip/paperclip/fake_geometry'
 require 'gb_paperclip/paperclip/geometry_parser'
-require 'gb_dispatch'
 
 module Paperclip
   class PdfThumbnail < Paperclip::Thumbnail
@@ -38,11 +37,8 @@ module Paperclip
 
     def make
       if @attachment
-        queue = @style ? "paperclip_#{@style}" : :paperclip
-        GBDispatch.dispatch_async_on_queue queue do
-          source_path = "#{File.expand_path(@safe_copy.path)}"
-          process_thumbnails source_path
-        end
+        source_path = "#{File.expand_path(@safe_copy.path)}"
+        process_thumbnails source_path
         nil
       else
         super
@@ -80,29 +76,11 @@ module Paperclip
         raise e
       end
       begin
-        while @attachment.is_saving?
-          sleep 0.01
-        end
         @attachment.change_queued_for_write do |queue|
           queue[@style] = Paperclip.io_adapters.for(dst) if dst
         end
-        @attachment.with_save_lock do
-          if @attachment.is_dirty?
-            GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
-              @attachment.finished_processing @style
-            end
-          else
-            GBDispatch.dispatch_async_on_queue(:paperclip_upload) do
-              begin
-                @attachment.flush_writes
-                @attachment.finished_processing @style
-              rescue Exception => e
-                @attachment.failed_processing @style
-                raise e
-              end
-            end
-          end
-        end
+        @attachment.flush_writes unless @attachment.is_dirty?
+        @attachment.finished_processing @style
       rescue Exception => e
         @attachment.failed_processing @style if @attachment && @style
         unlink_files @safe_copy, dst
