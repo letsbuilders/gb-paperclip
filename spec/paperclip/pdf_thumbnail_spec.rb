@@ -347,11 +347,9 @@ describe Paperclip::PdfThumbnail do
             Terrapin::CommandLine.path        = ''
             Paperclip.options[:command_path] = ''
             ENV['PATH']                      = ''
-            silence_stream(STDERR) do
-              @thumb.make
-            end
-            wait_for_make
-            wait_for_save
+            expect do
+              silence_stream(STDERR) { @thumb.make }
+            end.to raise_error(Paperclip::Errors::CommandNotFoundError)
             expect(@attachment.instance.processing).to be_falsey
             expect(@attachment.instance.processed_styles ||= []).not_to include(:test, 'test')
           ensure
@@ -457,10 +455,9 @@ describe Paperclip::PdfThumbnail do
           end
 
           it 'errors when trying to create the thumbnail' do
-            silence_stream(STDERR) do
-              @thumb.make
-            end
-            wait_for_make
+            expect do
+              silence_stream(STDERR) { @thumb.make }
+            end.to raise_error(Paperclip::Error)
             expect(@dummy.processing).to be_falsey
             expect(@dummy.processed_styles ||= []).not_to include(:test, 'test')
           end
@@ -506,11 +503,9 @@ describe Paperclip::PdfThumbnail do
           end
 
           it 'errors when trying to create the thumbnail' do
-            silence_stream(STDERR) do
-              @thumb.make
-            end
-            wait_for_make
-            wait_for_save
+            expect do
+              silence_stream(STDERR) { @thumb.make }
+            end.to raise_error(Paperclip::Error)
             expect(@dummy.processing).to be_falsey
             expect(@dummy.processed_styles ||= []).not_to include(:test, 'test')
           end
@@ -623,8 +618,7 @@ describe Paperclip::PdfThumbnail do
         it 'image magick have wrong params' do
           expect(@attachment).to receive(:failed_processing).with(:test)
           allow(@thumb).to receive(:convert).with(anything, anything).and_raise(Terrapin::ExitStatusError.new '')
-          expect { @thumb.make }.not_to raise_error
-          wait_for_make
+          expect { @thumb.make }.to raise_error(Paperclip::Error)
         end
 
         it 'image magick error' do
@@ -639,8 +633,7 @@ describe Paperclip::PdfThumbnail do
               silence_stream(STDERR) do
                 @thumb.make
               end
-            end.not_to raise_error Paperclip::Errors::CommandNotFoundError
-            wait_for_make
+            end.to raise_error(Paperclip::Errors::CommandNotFoundError)
           ensure
             ENV['PATH'] = old_path
           end
@@ -649,23 +642,13 @@ describe Paperclip::PdfThumbnail do
         it 'convert throws any error' do
           expect(@attachment).to receive(:failed_processing).with(:test)
           allow(@thumb).to receive(:convert).with(anything, anything).and_raise('test error')
-          expect { @thumb.make }.not_to raise_error
-          wait_for_make
+          expect { @thumb.make }.to raise_error('test error')
         end
 
         it 'save throws any error' do
           expect(@attachment).to receive(:failed_processing).with(:test)
-          allow(@attachment).to receive(:flush_writes).with(anything).and_raise('test error')
-          expect { @thumb.make }.not_to raise_error
-          wait_for_make
-          wait_for_save
-        end
-
-        it 'attachment throw error' do
-          expect(@attachment).to receive(:failed_processing).with(:test)
-          allow(@attachment).to receive(:is_saving?).and_raise('test error')
-          @thumb.make
-          wait_for_make
+          allow(@attachment).to receive(:flush_writes).and_raise('test error')
+          expect { @thumb.make }.to raise_error('test error')
         end
       end
     end
@@ -684,36 +667,9 @@ describe Paperclip::PdfThumbnail do
         @file.close
       end
 
-      it 'should wait if files being saved right now' do
-        @attachment.instance_variable_set :@is_saving, true
-        @attachment.instance_variable_set :@dirty, false
-        @thumb.make
-        sleep(0.5)
-        expect(@attachment.saved[:test]).to be_nil
-        @attachment.instance_variable_set :@is_saving, false
-        wait_for_make
-        wait_for_save
-        expect(@attachment.saved[:test]).to be_truthy
-      end
-
-      it 'should not make deadlock if is dirty' do
-        @dummy.save!
-        @attachment.processing :test
-        @attachment.instance_variable_set :@dirty, true
-        @thumb.make
-        sleep(0.5)
-        expect(@attachment.saved[:test]).to be_nil
-        @attachment.instance_variable_set :@is_saving, false
-        wait_for_make
-        wait_for_save
-        expect(@dummy.processed_styles).to include :test
-      end
-
       it 'should save files if attachment is not dirty' do
         @attachment.instance_variable_set :@dirty, false
         @thumb.make
-        wait_for_make
-        wait_for_save
         expect(@attachment.saved[:test]).to be_truthy
       end
     end
@@ -723,15 +679,9 @@ describe Paperclip::PdfThumbnail do
     @attachment.instance_eval 'def after_flush_writes; end'
   end
 
-  def wait_for_make
-    GBDispatch.dispatch_sync_on_queue :paperclip_test do
-      puts 'waiting for make'
-    end
-  end
-
-  def wait_for_save
-    GBDispatch.dispatch_sync_on_queue :paperclip_upload do
-      puts 'waiting for save'
-    end
-  end
+  # PdfThumbnail#make runs synchronously now, so these are no-ops preserved
+  # to keep the diff minimal. Existing `wait_for_make` / `wait_for_save` call
+  # sites can be removed in a follow-up cleanup.
+  def wait_for_make; end
+  def wait_for_save; end
 end
