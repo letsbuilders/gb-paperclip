@@ -17,42 +17,6 @@ describe Paperclip::Attachment do
     @attachment   = @dummy.avatar
   end
 
-  context 'saving with lock' do
-    it 'should put save lock while saving' do
-      async_flag                          = false
-      @attachment.queued_for_write[:test] = Paperclip.io_adapters.for(@file)
-      GBDispatch.dispatch_async(:test) do
-        @attachment.with_save_lock do
-          sleep(0.02)
-          async_flag = true
-        end
-      end
-      sleep(0.001)
-      GBDispatch.dispatch_sync(:save) do
-        @dummy.save
-      end
-      expect(async_flag).to eq true
-      wait_for :test
-    end
-
-    it 'should use status lock' do
-      async_flag                          = false
-      @attachment.queued_for_write[:test] = Paperclip.io_adapters.for(@file)
-      GBDispatch.dispatch_async(:test) do
-        @attachment.send(:status_lock).lock
-        sleep(0.3)
-        async_flag = true
-        @attachment.send(:status_lock).unlock
-      end
-      sleep(0.1)
-      GBDispatch.dispatch_sync :save do
-        sleep(0.05)
-        @attachment.save
-      end
-      expect(async_flag).to eq true
-    end
-  end
-
   it 'unlink files should handle nil values' do
     file = File.new(fixture_file('5k.png'), 'rb')
     expect { @attachment.unlink_files([file, nil]) }.not_to raise_error
@@ -100,34 +64,6 @@ describe Paperclip::Attachment do
           expect(@dummy.changes.keys).not_to include 'processing'
         end
 
-        it 'should save if saving on different thread' do
-          unless  defined? SleepyDummy
-            class SleepyDummy < Dummy
-              self.table_name = 'dummies'
-              after_save :take_nap
-
-              def take_nap
-                sleep(0.015)
-              end
-            end
-          end
-          dummy = nil
-          GBDispatch.dispatch_sync(:save) do
-            dummy        = SleepyDummy.new
-            dummy.avatar = @file
-          end
-          GBDispatch.dispatch_async(:save) do
-            dummy.save!
-          end
-          GBDispatch.dispatch_sync(:process) do
-            sleep(0.001)
-            expect { dummy.avatar.processing(:test_style) }.not_to raise_error
-          end
-          wait_for :save
-          expect(dummy.avatar.saved[:original]).not_to be_nil
-          expect(dummy.changes.keys.any?).to be_falsey
-          expect(dummy.reload.processing).to eq true
-        end
       end
     end
 
@@ -148,23 +84,6 @@ describe Paperclip::Attachment do
     end
 
     context 'saving processing info' do
-      it 'should use save lock' do
-        async_flag = false
-        @attachment.instance_variable_set :@processed_styles, [:foo, :bar]
-        GBDispatch.dispatch_async(:test) do
-          @attachment.with_save_lock do
-            sleep(0.02)
-            async_flag = true
-          end
-        end
-        GBDispatch.dispatch_sync :save do
-          sleep(0.001)
-          @attachment.send :save_processing_info
-        end
-        expect(async_flag).to eq true
-        wait_for :test
-      end
-
       it 'should set proper value for new object' do
         dummy = Dummy.new
         dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
@@ -195,42 +114,6 @@ describe Paperclip::Attachment do
         expect(@dummy.processed_styles).to eq [:foo, :bar]
       end
 
-      100.times do |counter|
-        it "should save if saving on different thread #{counter}" do
-          unless defined? SleepyDummy
-            class SleepyDummy < Dummy
-              self.table_name = 'dummies'
-              after_save :take_nap
-
-              def take_nap
-                sleep(0.015)
-              end
-            end
-          end
-          dummy  = nil
-          status = nil
-          GBDispatch.dispatch_sync(:save) do
-            dummy        = SleepyDummy.new
-            dummy.avatar = @file
-          end
-          GBDispatch.dispatch_async(:save) do
-            Dummy.transaction do
-              status = dummy.save!
-            end
-          end
-          GBDispatch.dispatch_sync(:process) do
-            sleep(0.001)
-            dummy.avatar.instance_variable_set :@processed_styles, [:foo, :bar]
-            expect { dummy.avatar.send :save_processing_info }.not_to raise_error
-          end
-          wait_for :save
-          expect(dummy.avatar.saved[:original]).not_to be_nil
-          expect(status).to be_truthy
-          expect(dummy.changes.keys).to eq []
-          expect(dummy.reload.processing).to eq false
-          expect(dummy.processed_styles).to eq [:foo, :bar]
-        end
-      end
     end
 
     context 'set processing info' do
@@ -387,9 +270,4 @@ describe Paperclip::Attachment do
     end
   end
 
-  def wait_for(queue)
-    GBDispatch.dispatch_sync_on_queue queue do
-      puts "waiting for #{queue}"
-    end
-  end
 end

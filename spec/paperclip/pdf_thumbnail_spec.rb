@@ -284,14 +284,13 @@ describe Paperclip::PdfThumbnail do
     end
   end
 
-  context 'async' do
+  context 'with attachment' do
     context 'An normal pdf' do
       before do
         @file = File.new(fixture_file('twopage.pdf'), 'rb')
         rebuild_model storage: :fake
         @dummy      = Dummy.new
         @attachment = @dummy.avatar
-        wait_for_make
       end
 
       after { @file.close }
@@ -319,8 +318,6 @@ describe Paperclip::PdfThumbnail do
             before do
               stub_attachment
               @thumb.make
-              wait_for_make
-              wait_for_save
               @thumb_result = @attachment.saved[:test]
             end
 
@@ -384,14 +381,11 @@ describe Paperclip::PdfThumbnail do
             hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
           )
           @thumb.make
-          wait_for_make
         end
 
         it 'creates the thumbnail when sent #make' do
           stub_attachment
           @thumb.make
-          wait_for_make
-          wait_for_save
           dst = @attachment.saved[:test]
           assert_match /100x50/, `identify "#{dst.path}"`
           dst.close
@@ -404,8 +398,6 @@ describe Paperclip::PdfThumbnail do
         thumb = Paperclip::PdfThumbnail.new(file, { geometry: '50x50#', style: :test }, @attachment)
 
         thumb.make
-        wait_for_make
-        wait_for_save
         output_file = @attachment.saved[:test]
 
         command = Terrapin::CommandLine.new('identify', '-format %wx%h :file')
@@ -432,14 +424,11 @@ describe Paperclip::PdfThumbnail do
             hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
           )
           @thumb.make
-          wait_for_make
         end
 
         it 'creates the thumbnail when sent #make' do
           stub_attachment
           @thumb.make
-          wait_for_make
-          wait_for_save
           dst = @attachment.saved[:test]
           assert_match /100x50/, `identify "#{dst.path}"`
           dst.close
@@ -482,14 +471,11 @@ describe Paperclip::PdfThumbnail do
             hash_including(source: "#{File.expand_path(@thumb.safe_copy.path)}[0]")
           )
           @thumb.make
-          wait_for_make
         end
 
         it 'creates the thumbnail when sent #make' do
           stub_attachment
           @thumb.make
-          wait_for_make
-          wait_for_save
           dst = @attachment.saved[:test]
           assert_match /100x50/, `identify "#{dst.path}"`
           dst.close
@@ -595,7 +581,6 @@ describe Paperclip::PdfThumbnail do
         @dummy      = Dummy.new
         @attachment = @dummy.avatar
         @thumb      = Paperclip::PdfThumbnail.new(@file, { geometry: '100x50#', style: :test }, @attachment)
-        wait_for_make
       end
 
       after(:each) { @file.close }
@@ -603,15 +588,12 @@ describe Paperclip::PdfThumbnail do
       it 'should call finished processing style if successes' do
         expect(@attachment).to receive(:finished_processing).with(:test)
         @thumb.make
-        wait_for_make
-        wait_for_save
       end
 
       it 'should call finished processing style if successes and is_dirty' do
         expect(@attachment).to receive(:finished_processing).with(:test)
         allow(@attachment).to receive(:is_dirty?).and_return(true)
         @thumb.make
-        wait_for_make
       end
 
       context 'should call failed processing style if' do
@@ -678,10 +660,4 @@ describe Paperclip::PdfThumbnail do
   def stub_attachment
     @attachment.instance_eval 'def after_flush_writes; end'
   end
-
-  # PdfThumbnail#make runs synchronously now, so these are no-ops preserved
-  # to keep the diff minimal. Existing `wait_for_make` / `wait_for_save` call
-  # sites can be removed in a follow-up cleanup.
-  def wait_for_make; end
-  def wait_for_save; end
 end
